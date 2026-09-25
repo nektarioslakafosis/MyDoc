@@ -1,0 +1,149 @@
+﻿@model MyDoc.Models.Doctor
+
+@{
+    ViewData["Title"] = "Επεξεργασία ιατρού";
+}
+
+<section class="dashboard-page admin-v4-page">
+    <div class="container">
+
+        <header class="admin-v4-form-header">
+
+            <a asp-action="Details"
+               asp-route-id="@Model.Id"
+               class="appointment-back-link">
+                ← Ιατρός
+            </a>
+
+            <span class="admin-v4-eyebrow">
+                ΣΤΟΙΧΕΙΑ ΙΑΤΡΟΥ
+            </span>
+
+            <h1>Επεξεργασία</h1>
+
+            <p>
+                Ενημερώστε τα στοιχεία του λογαριασμού.
+            </p>
+
+        </header>
+
+
+        <form asp-action="Edit"
+              method="post"
+              class="admin-v4-form-card"
+              novalidate>
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden"
+                   asp-for="Id" />
+
+            <div asp-validation-summary="ModelOnly"
+                 class="admin-v4-validation text-danger">
+            </div>
+
+
+            <section class="admin-v4-form-section">
+
+                <div class="admin-v4-form-grid">
+
+                    <div class="admin-v4-field">
+                        <label asp-for="FirstName">
+                            Όνομα
+                        </label>
+
+                        <input asp-for="FirstName"
+                               class="admin-v4-input" />
+
+                        <span asp-validation-for="FirstName"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="admin-v4-field">
+                        <label asp-for="LastName">
+                            Επώνυμο
+                        </label>
+
+                        <input asp-for="LastName"
+                               class="admin-v4-input" />
+
+                        <span asp-validation-for="LastName"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="admin-v4-field admin-v4-field-full">
+                        <label asp-for="Specialty">
+                            Ειδικότητα
+                        </label>
+
+                        <input asp-for="Specialty"
+                               class="admin-v4-input" />
+
+                        <span asp-validation-for="Specialty"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="admin-v4-field">
+                        <label asp-for="Email">
+                            Email
+                        </label>
+
+                        <input asp-for="Email"
+                               type="text"
+                               inputmode="email"
+                               class="admin-v4-input"
+                               autocomplete="email" />
+
+                        <span asp-validation-for="Email"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="admin-v4-field">
+                        <label asp-for="PhoneNumber">
+                            Τηλέφωνο
+                        </label>
+
+                        <input asp-for="PhoneNumber"
+                               type="text"
+                               inputmode="numeric"
+                               maxlength="10"
+                               class="admin-v4-input"
+                               autocomplete="tel" />
+
+                        <span asp-validation-for="PhoneNumber"
+                              class="text-danger"></span>
+                    </div>
+
+                </div>
+
+                <div class="admin-v4-info-note">
+                    Η αλλαγή email ενημερώνει και
+                    το email σύνδεσης του ιατρού.
+                </div>
+
+            </section>
+
+
+            <div class="admin-v4-form-actions">
+
+                <button type="submit"
+                        class="btn btn-primary-custom">
+                    Αποθήκευση αλλαγών
+                </button>
+
+                <a asp-action="Details"
+                   asp-route-id="@Model.Id"
+                   class="btn btn-outline-dashboard">
+                    Άκυρο
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

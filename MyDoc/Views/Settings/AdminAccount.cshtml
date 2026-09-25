@@ -1,0 +1,150 @@
+﻿@model MyDoc.Models.Settings.AdminSettingsVM
+
+@{
+    ViewData["Title"] = "Λογαριασμός";
+}
+
+<section class="dashboard-page account-settings-page">
+    <div class="container">
+
+        <div class="account-settings-page-header">
+            <h1>Λογαριασμός</h1>
+        </div>
+
+
+        <div class="account-settings-shell">
+
+            <aside class="account-settings-sidebar">
+
+                <div class="account-security-sidebar-heading">
+
+                    <div class="account-security-sidebar-icon">
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <rect x="4"
+                                  y="10"
+                                  width="16"
+                                  height="11"
+                                  rx="3"></rect>
+                            <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+                        </svg>
+                    </div>
+
+                    <div>
+                        <strong>
+                            Διαχειριστής
+                        </strong>
+
+                        <span>
+                            @Model.Email
+                        </span>
+                    </div>
+
+                </div>
+
+
+                <nav class="account-settings-nav">
+
+                    <a asp-controller="Settings"
+                       asp-action="AdminAccount"
+                       class="account-settings-nav-item active">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8">
+                            <circle cx="12" cy="8" r="4"></circle>
+                            <path d="M4.5 21c.7-4.2 3.2-6.5 7.5-6.5s6.8 2.3 7.5 6.5"></path>
+                        </svg>
+
+                        <span>
+                            Λογαριασμός
+                        </span>
+
+                    </a>
+
+
+                    <a asp-area="Identity"
+                       asp-page="/Account/Manage/ChangePassword"
+                       class="account-settings-nav-item">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8">
+                            <rect x="4"
+                                  y="10"
+                                  width="16"
+                                  height="11"
+                                  rx="3"></rect>
+                            <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+                        </svg>
+
+                        <span>
+                            Κωδικός
+                        </span>
+
+                    </a>
+
+                </nav>
+
+            </aside>
+
+
+            <main class="account-settings-content">
+
+                <div class="account-settings-content-header">
+                    <div>
+                        <h2>
+                            Λογαριασμός διαχειριστή
+                        </h2>
+
+                        <p>
+                            Βασικά στοιχεία πρόσβασης
+                            στο MyDoc.
+                        </p>
+                    </div>
+                </div>
+
+
+                <div class="account-security-form">
+
+                    <div class="account-settings-field">
+                        <label>
+                            Email σύνδεσης
+                        </label>
+
+                        <div class="account-settings-locked-field">
+                            <span>
+                                @Model.Email
+                            </span>
+
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.8">
+                                <rect x="5"
+                                      y="10"
+                                      width="14"
+                                      height="10"
+                                      rx="2"></rect>
+                                <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                </div>
+
+
+                
+
+            </main>
+
+        </div>
+
+    </div>
+</section>

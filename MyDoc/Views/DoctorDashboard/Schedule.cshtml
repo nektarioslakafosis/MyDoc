@@ -1,0 +1,577 @@
+﻿@model MyDoc.Models.DoctorScheduleVM
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Πρόγραμμα";
+
+    var greekCulture = new CultureInfo("el-GR");
+
+    var orderedDays = new[]
+    {
+        DayOfWeek.Monday,
+        DayOfWeek.Tuesday,
+        DayOfWeek.Wednesday,
+        DayOfWeek.Thursday,
+        DayOfWeek.Friday,
+        DayOfWeek.Saturday,
+        DayOfWeek.Sunday
+    };
+
+    string GetGreekDayName(DayOfWeek day) => day switch
+    {
+        DayOfWeek.Monday => "Δευτέρα",
+        DayOfWeek.Tuesday => "Τρίτη",
+        DayOfWeek.Wednesday => "Τετάρτη",
+        DayOfWeek.Thursday => "Πέμπτη",
+        DayOfWeek.Friday => "Παρασκευή",
+        DayOfWeek.Saturday => "Σάββατο",
+        DayOfWeek.Sunday => "Κυριακή",
+        _ => day.ToString()
+    };
+
+    string GetDayShortName(DayOfWeek day) => day switch
+    {
+        DayOfWeek.Monday => "ΔΕΥ",
+        DayOfWeek.Tuesday => "ΤΡΙ",
+        DayOfWeek.Wednesday => "ΤΕΤ",
+        DayOfWeek.Thursday => "ΠΕΜ",
+        DayOfWeek.Friday => "ΠΑΡ",
+        DayOfWeek.Saturday => "ΣΑΒ",
+        DayOfWeek.Sunday => "ΚΥΡ",
+        _ => day.ToString().ToUpper()
+    };
+
+    string GetMonthShort(DateTime date)
+    {
+        return date.ToString("MMM", greekCulture)
+            .Replace(".", "")
+            .ToUpper();
+    }
+}
+
+<section class="dashboard-page doctor-schedule-v2-page">
+    <div class="container">
+
+        <div class="doctor-schedule-v2-header">
+            <div>
+                <a asp-action="Index" class="appointment-back-link">
+                    ← Dashboard
+                </a>
+
+                <div class="doctor-schedule-v2-title-row">
+                    <div class="doctor-schedule-v2-title-icon">
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+                            <rect x="3" y="4" width="18" height="17" rx="3"></rect>
+                            <path d="M8 2.5v4"></path>
+                            <path d="M16 2.5v4"></path>
+                            <path d="M3 9h18"></path>
+                            <path d="M8 13h3"></path>
+                            <path d="M14 13h2"></path>
+                            <path d="M8 17h3"></path>
+                            <path d="M14 17h2"></path>
+                        </svg>
+                    </div>
+
+                    <div>
+                        <span class="doctor-schedule-v2-kicker">
+                            Πρόγραμμα ιατρού
+                        </span>
+
+                        <h1>Εβδομαδιαίο πρόγραμμα</h1>
+
+                        <p>
+                            Διαχειριστείτε τις ώρες διαθεσιμότητας και τις ημέρες
+                            που δεν μπορείτε να δεχτείτε ραντεβού.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="doctor-schedule-v2-header-actions">
+                <a asp-action="CreateUnavailablePeriod"
+                   class="btn btn-outline-dashboard">
+                    Νέα απουσία
+                </a>
+
+                <a asp-action="CreateAvailability"
+                   class="btn btn-primary-custom">
+                    + Νέα διαθεσιμότητα
+                </a>
+            </div>
+        </div>
+
+        <section class="doctor-schedule-v2-week-card">
+            <div class="doctor-schedule-v2-section-header">
+                <div>
+                    <h2>Εβδομαδιαίο ωράριο</h2>
+                    <p>
+                        Οι ώρες κατά τις οποίες μπορούν να προγραμματίζονται ραντεβού.
+                    </p>
+                </div>
+            </div>
+
+            @if (!Model.Availabilities.Any())
+            {
+                <div class="doctor-schedule-v2-empty">
+                    <div class="doctor-schedule-v2-empty-icon">
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+                            <rect x="3" y="4" width="18" height="17" rx="3"></rect>
+                            <path d="M8 2.5v4"></path>
+                            <path d="M16 2.5v4"></path>
+                            <path d="M3 9h18"></path>
+                            <path d="M12 13v5"></path>
+                            <path d="M9.5 15.5h5"></path>
+                        </svg>
+                    </div>
+
+                    <div>
+                        <h3>Δεν υπάρχει ακόμα εβδομαδιαίο ωράριο</h3>
+                        <p>
+                            Προσθέστε τις ημέρες και ώρες κατά τις οποίες
+                            μπορούν να κλείνονται ραντεβού.
+                        </p>
+                    </div>
+
+                    <a asp-action="CreateAvailability"
+                       class="btn btn-primary-custom">
+                        Προσθήκη διαθεσιμότητας
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="doctor-schedule-v2-board-scroll">
+                    <div class="doctor-schedule-v2-board">
+
+                        @foreach (var day in orderedDays)
+                        {
+                            var dayItems = Model.Availabilities
+                            .Where(x => x.DayOfWeek == day)
+                            .OrderBy(x => x.StartTime)
+                            .ToList();
+
+                            <article class="doctor-schedule-v2-day @(dayItems.Any() ? "" : "doctor-schedule-v2-day-empty")">
+
+                                <div class="doctor-schedule-v2-day-header">
+                                    <div>
+                                        <span>@GetDayShortName(day)</span>
+                                        <h3>@GetGreekDayName(day)</h3>
+                                    </div>
+
+                                    @if (dayItems.Any())
+                                    {
+                                        <span class="doctor-schedule-v2-day-count">
+                                            @dayItems.Count
+                                        </span>
+                                    }
+                                </div>
+
+                                <div class="doctor-schedule-v2-day-body">
+
+                                    @if (!dayItems.Any())
+                                    {
+                                        <div class="doctor-schedule-v2-no-hours">
+                                            Δεν υπάρχει ωράριο
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var item in dayItems)
+                                        {
+                                            <div class="doctor-schedule-v2-time-row">
+                                                <strong>
+                                                    @item.StartTime.ToString("HH:mm")
+                                                    <span>—</span>
+                                                    @item.EndTime.ToString("HH:mm")
+                                                </strong>
+
+                                                <button type="button"
+                                                        class="doctor-schedule-v2-delete-btn"
+                                                        title="Αφαίρεση διαθεσιμότητας"
+                                                        aria-label="Αφαίρεση διαθεσιμότητας"
+                                                        data-schedule-delete-url="@Url.Action("DeleteAvailability", "DoctorDashboard", new { id = item.Id })"
+                                                        data-schedule-delete-title="Αφαίρεση διαθεσιμότητας"
+                                                        data-schedule-delete-message="Η συγκεκριμένη διαθεσιμότητα θα αφαιρεθεί από το εβδομαδιαίο σας πρόγραμμα. Η αφαίρεση επιτρέπεται μόνο εφόσον δεν επηρεάζει μελλοντικά ενεργά ραντεβού."
+                                                        data-schedule-delete-button="Αφαίρεση">
+
+                                                    <svg viewBox="0 0 24 24"
+                                                         fill="none"
+                                                         stroke="currentColor"
+                                                         stroke-width="1.9"
+                                                         stroke-linecap="round"
+                                                         stroke-linejoin="round"
+                                                         aria-hidden="true">
+                                                        <path d="M4 7h16"></path>
+                                                        <path d="M9 7V4h6v3"></path>
+                                                        <path d="M6 7l1 14h10l1-14"></path>
+                                                        <path d="M10 11v6"></path>
+                                                        <path d="M14 11v6"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        }
+                                    }
+
+                                </div>
+                            </article>
+                        }
+
+                    </div>
+                </div>
+            }
+        </section>
+
+        <section class="doctor-schedule-v2-absence-card">
+
+            <div class="doctor-schedule-v2-section-header doctor-schedule-v2-absence-header">
+                <div>
+                    <h2>Απουσίες</h2>
+                    <p>
+                        Συγκεκριμένες ημέρες και ώρες στις οποίες δεν είστε διαθέσιμος.
+                    </p>
+                </div>
+
+                <a asp-action="CreateUnavailablePeriod"
+                   class="doctor-schedule-v2-small-action">
+                    + Νέα απουσία
+                </a>
+            </div>
+
+            <ul class="nav doctor-schedule-v2-tabs"
+                id="doctorScheduleAbsenceTabs"
+                role="tablist">
+
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active"
+                            id="active-absences-tab"
+                            data-bs-toggle="pill"
+                            data-bs-target="#activeAbsencesPanel"
+                            type="button"
+                            role="tab"
+                            aria-controls="activeAbsencesPanel"
+                            aria-selected="true">
+
+                        Ενεργές
+                        <span>@Model.UnavailablePeriods.Count</span>
+                    </button>
+                </li>
+
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link"
+                            id="past-absences-tab"
+                            data-bs-toggle="pill"
+                            data-bs-target="#pastAbsencesPanel"
+                            type="button"
+                            role="tab"
+                            aria-controls="pastAbsencesPanel"
+                            aria-selected="false">
+
+                        Ιστορικό
+                        <span>@Model.PastUnavailablePeriods.Count</span>
+                    </button>
+                </li>
+
+            </ul>
+
+            <div class="tab-content doctor-schedule-v2-tab-content">
+
+                <div class="tab-pane fade show active"
+                     id="activeAbsencesPanel"
+                     role="tabpanel"
+                     aria-labelledby="active-absences-tab">
+
+                    @if (!Model.UnavailablePeriods.Any())
+                    {
+                        <div class="doctor-schedule-v2-list-empty">
+                            <strong>Δεν υπάρχουν ενεργές απουσίες</strong>
+                            <p>
+                                Δεν έχετε δηλώσει κάποια τρέχουσα ή μελλοντική εξαίρεση στο πρόγραμμά σας.
+                            </p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="doctor-schedule-v2-absence-list">
+
+                            @foreach (var item in Model.UnavailablePeriods)
+                            {
+                                var unavailableStart =
+                                item.Date.Date.Add(item.StartTime.ToTimeSpan());
+
+                                var unavailableEnd =
+                                item.Date.Date.Add(item.EndTime.ToTimeSpan());
+
+                                var isCurrentlyUnavailable =
+                                unavailableStart <= DateTime.Now &&
+                                unavailableEnd > DateTime.Now;
+
+                                <article class="doctor-schedule-v2-absence-row">
+
+                                    <div class="doctor-schedule-v2-date-tile">
+                                        <span>@GetMonthShort(item.Date)</span>
+                                        <strong>@item.Date.ToString("dd")</strong>
+                                    </div>
+
+                                    <div class="doctor-schedule-v2-absence-main">
+
+                                        <div class="doctor-schedule-v2-absence-topline">
+                                            <span class="doctor-schedule-v2-absence-status @(isCurrentlyUnavailable ? "is-current" : "")">
+                                                @(isCurrentlyUnavailable ? "Σε εξέλιξη" : "Μελλοντική")
+                                            </span>
+                                        </div>
+
+                                        <h3>
+                                            @item.Date.ToString("dddd, dd MMMM yyyy", greekCulture)
+                                        </h3>
+
+                                        <p class="doctor-schedule-v2-absence-time">
+                                            @item.StartTime.ToString("HH:mm")
+                                            —
+                                            @item.EndTime.ToString("HH:mm")
+                                        </p>
+
+                                        @if (!string.IsNullOrWhiteSpace(item.Reason))
+                                        {
+                                            <p class="doctor-schedule-v2-absence-reason">
+                                                @item.Reason
+                                            </p>
+                                        }
+
+                                    </div>
+
+                                    <button type="button"
+                                            class="doctor-schedule-v2-delete-btn doctor-schedule-v2-absence-delete"
+                                            title="Διαγραφή απουσίας"
+                                            aria-label="Διαγραφή απουσίας"
+                                            data-schedule-delete-url="@Url.Action("DeleteUnavailablePeriod", "DoctorDashboard", new { id = item.Id })"
+                                            data-schedule-delete-title="Διαγραφή απουσίας"
+                                            data-schedule-delete-message="Η συγκεκριμένη απουσία θα αφαιρεθεί από το πρόγραμμά σας. Ραντεβού που είχαν ήδη ακυρωθεί εξαιτίας της δεν θα επανέλθουν αυτόματα."
+                                            data-schedule-delete-button="Διαγραφή">
+
+                                        <svg viewBox="0 0 24 24"
+                                             fill="none"
+                                             stroke="currentColor"
+                                             stroke-width="1.9"
+                                             stroke-linecap="round"
+                                             stroke-linejoin="round"
+                                             aria-hidden="true">
+                                            <path d="M4 7h16"></path>
+                                            <path d="M9 7V4h6v3"></path>
+                                            <path d="M6 7l1 14h10l1-14"></path>
+                                            <path d="M10 11v6"></path>
+                                            <path d="M14 11v6"></path>
+                                        </svg>
+                                    </button>
+
+                                </article>
+                            }
+
+                        </div>
+                    }
+
+                </div>
+
+                <div class="tab-pane fade"
+                     id="pastAbsencesPanel"
+                     role="tabpanel"
+                     aria-labelledby="past-absences-tab">
+
+                    @if (!Model.PastUnavailablePeriods.Any())
+                    {
+                        <div class="doctor-schedule-v2-list-empty">
+                            <strong>Δεν υπάρχει ιστορικό απουσιών</strong>
+                            <p>
+                                Οι προηγούμενες απουσίες σας θα εμφανίζονται εδώ.
+                            </p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="doctor-schedule-v2-absence-list">
+
+                            @foreach (var item in Model.PastUnavailablePeriods)
+                            {
+                                <article class="doctor-schedule-v2-absence-row doctor-schedule-v2-absence-row-past">
+
+                                    <div class="doctor-schedule-v2-date-tile doctor-schedule-v2-date-tile-past">
+                                        <span>@GetMonthShort(item.Date)</span>
+                                        <strong>@item.Date.ToString("dd")</strong>
+                                    </div>
+
+                                    <div class="doctor-schedule-v2-absence-main">
+
+                                        <div class="doctor-schedule-v2-absence-topline">
+                                            <span class="doctor-schedule-v2-absence-status is-past">
+                                                Ολοκληρώθηκε
+                                            </span>
+                                        </div>
+
+                                        <h3>
+                                            @item.Date.ToString("dddd, dd MMMM yyyy", greekCulture)
+                                        </h3>
+
+                                        <p class="doctor-schedule-v2-absence-time">
+                                            @item.StartTime.ToString("HH:mm")
+                                            —
+                                            @item.EndTime.ToString("HH:mm")
+                                        </p>
+
+                                        @if (!string.IsNullOrWhiteSpace(item.Reason))
+                                        {
+                                            <p class="doctor-schedule-v2-absence-reason">
+                                                @item.Reason
+                                            </p>
+                                        }
+
+                                    </div>
+
+                                </article>
+                            }
+
+                        </div>
+                    }
+
+                </div>
+
+            </div>
+        </section>
+
+    </div>
+</section>
+
+<div class="modal fade"
+     id="scheduleDeleteModal"
+     tabindex="-1"
+     aria-labelledby="scheduleDeleteModalTitle"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content mydoc-modal">
+
+            <div class="modal-header mydoc-modal-header">
+                <div>
+                    <h5 class="modal-title"
+                        id="scheduleDeleteModalTitle">
+                        Επιβεβαίωση
+                    </h5>
+
+                    <p>
+                        Ελέγξτε την ενέργεια πριν συνεχίσετε.
+                    </p>
+                </div>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Κλείσιμο">
+                </button>
+            </div>
+
+            <div class="modal-body mydoc-modal-body">
+                <p id="scheduleDeleteModalMessage"></p>
+            </div>
+
+            <div class="modal-footer mydoc-modal-footer">
+
+                <button type="button"
+                        class="btn btn-outline-dashboard"
+                        data-bs-dismiss="modal">
+                    Πίσω
+                </button>
+
+                <form id="scheduleDeleteForm" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit"
+                            id="scheduleDeleteConfirmButton"
+                            class="btn btn-danger">
+                        Επιβεβαίωση
+                    </button>
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const modalElement =
+                document.getElementById("scheduleDeleteModal");
+
+            const form =
+                document.getElementById("scheduleDeleteForm");
+
+            const title =
+                document.getElementById("scheduleDeleteModalTitle");
+
+            const message =
+                document.getElementById("scheduleDeleteModalMessage");
+
+            const confirmButton =
+                document.getElementById("scheduleDeleteConfirmButton");
+
+            if (!modalElement ||
+                !form ||
+                !title ||
+                !message ||
+                !confirmButton ||
+                !window.bootstrap) {
+                return;
+            }
+
+            const modal =
+                new bootstrap.Modal(modalElement);
+
+            document
+                .querySelectorAll("[data-schedule-delete-url]")
+                .forEach(function (button) {
+
+                    button.addEventListener("click", function () {
+
+                        const deleteUrl =
+                            button.getAttribute("data-schedule-delete-url");
+
+                        const deleteTitle =
+                            button.getAttribute("data-schedule-delete-title");
+
+                        const deleteMessage =
+                            button.getAttribute("data-schedule-delete-message");
+
+                        const deleteButtonText =
+                            button.getAttribute("data-schedule-delete-button");
+
+                        form.setAttribute("action", deleteUrl);
+
+                        title.textContent =
+                            deleteTitle || "Επιβεβαίωση";
+
+                        message.textContent =
+                            deleteMessage || "";
+
+                        confirmButton.textContent =
+                            deleteButtonText || "Επιβεβαίωση";
+
+                        modal.show();
+                    });
+
+                });
+
+        });
+    </script>
+}

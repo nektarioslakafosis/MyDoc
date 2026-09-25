@@ -1,0 +1,1012 @@
+﻿@model MyDoc.Models.AppointmentCreateVM
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Νέο Ραντεβού";
+
+    var greekCulture = new CultureInfo("el-GR");
+
+    var monthStart = new DateTime(
+        Model.CalendarMonth.Year,
+        Model.CalendarMonth.Month,
+        1);
+
+    var currentMonth = new DateTime(
+        DateTime.Today.Year,
+        DateTime.Today.Month,
+        1);
+
+    var previousMonth = monthStart.AddMonths(-1);
+    var nextMonth = monthStart.AddMonths(1);
+
+    var canGoPrevious =
+        previousMonth >= currentMonth;
+
+    var startOffset =
+        ((int)monthStart.DayOfWeek + 6) % 7;
+
+    var calendarStart =
+        monthStart.AddDays(-startOffset);
+
+    var calendarDays =
+        Enumerable.Range(0, 42)
+            .Select(i => calendarStart.AddDays(i))
+            .ToList();
+
+    string[] dayNames =
+    {
+        "ΔΕΥ",
+        "ΤΡΙ",
+        "ΤΕΤ",
+        "ΠΕΜ",
+        "ΠΑΡ",
+        "ΣΑΒ",
+        "ΚΥΡ"
+    };
+
+    string GetDoctorName(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return "-";
+
+        var specialtyStart =
+            text.LastIndexOf(
+                " (",
+                StringComparison.Ordinal);
+
+        return specialtyStart > 0
+            ? text.Substring(0, specialtyStart)
+            : text;
+    }
+
+    string GetDoctorSpecialty(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return string.Empty;
+
+        var specialtyStart =
+            text.LastIndexOf(
+                " (",
+                StringComparison.Ordinal);
+
+        if (specialtyStart < 0 ||
+            !text.EndsWith(")"))
+        {
+            return string.Empty;
+        }
+
+        var valueStart =
+            specialtyStart + 2;
+
+        var valueLength =
+            text.Length -
+            valueStart -
+            1;
+
+        return valueLength > 0
+            ? text.Substring(
+                valueStart,
+                valueLength)
+            : string.Empty;
+    }
+
+    var specialties =
+        Model.Doctors
+            .Select(x =>
+                GetDoctorSpecialty(
+                    x.Text ?? string.Empty))
+            .Where(x =>
+                !string.IsNullOrWhiteSpace(x))
+            .Distinct(
+                StringComparer.CurrentCultureIgnoreCase)
+            .OrderBy(
+                x => x,
+                StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
+    var selectedDoctorItem =
+        Model.Doctors
+            .FirstOrDefault(x =>
+                x.Value ==
+                Model.DoctorId.ToString());
+
+    var selectedDoctorName =
+        selectedDoctorItem == null
+            ? null
+            : GetDoctorName(
+                selectedDoctorItem.Text ??
+                string.Empty);
+
+    var selectedDoctorSpecialty =
+        selectedDoctorItem == null
+            ? null
+            : GetDoctorSpecialty(
+                selectedDoctorItem.Text ??
+                string.Empty);
+}
+
+<section class="dashboard-page appointment-create-page">
+    <div class="container">
+
+        <div class="appointment-create-header">
+            <a asp-controller="PatientDashboard"
+               asp-action="Index"
+               class="appointment-back-link">
+                ← Ραντεβού
+            </a>
+
+            <h1>Νέο ραντεβού</h1>
+
+            <p>
+                Επιλέξτε ιατρό, διαθέσιμη ώρα και γράψτε
+                σύντομα τον λόγο της επίσκεψης.
+            </p>
+        </div>
+
+        <div asp-validation-summary="All"
+             class="text-danger mb-3">
+        </div>
+
+        <section class="appointment-create-card">
+
+            <div class="appointment-create-step">
+                <span>1</span>
+
+                <div>
+                    <h2>Επιλογή ιατρού</h2>
+
+                    <p>
+                        Αναζητήστε τον ιατρό που χρειάζεστε
+                        με όνομα ή ειδικότητα.
+                    </p>
+                </div>
+            </div>
+
+            <div class="appointment-doctor-search-controls">
+
+                <div>
+                    <label for="createDoctorSearch"
+                           class="form-label form-label-custom">
+                        Αναζήτηση
+                    </label>
+
+                    <div class="appointment-doctor-search-input-wrap">
+                        <svg viewBox="0 0 24 24"
+                             aria-hidden="true"
+                             focusable="false">
+                            <circle cx="11"
+                                    cy="11"
+                                    r="7">
+                            </circle>
+
+                            <path d="M20 20l-4-4"></path>
+                        </svg>
+
+                        <input id="createDoctorSearch"
+                               type="search"
+                               class="form-control form-control-custom"
+                               autocomplete="off"
+                               placeholder="Όνομα ή ειδικότητα" />
+                    </div>
+                </div>
+
+                <div>
+                    <label for="createDoctorSpecialty"
+                           class="form-label form-label-custom">
+                        Ειδικότητα
+                    </label>
+
+                    <select id="createDoctorSpecialty"
+                            class="form-select form-control-custom">
+
+                        <option value="">
+                            Όλες οι ειδικότητες
+                        </option>
+
+                        @foreach (var specialty
+                                                in specialties)
+                        {
+                            <option value="@specialty">
+                                @specialty
+                            </option>
+                        }
+                    </select>
+                </div>
+
+            </div>
+
+            
+
+            <div class="appointment-doctor-results-meta">
+                <span id="createDoctorResultCount">
+                </span>
+            </div>
+
+            @if (Model.Doctors.Any())
+            {
+                <div id="createDoctorResults"
+                     class="appointment-doctor-results">
+
+                    @foreach (var doctor in Model.Doctors)
+                    {
+                        var doctorText =
+                        doctor.Text ??
+                        string.Empty;
+
+                        var doctorName =
+                        GetDoctorName(
+                        doctorText);
+
+                        var doctorSpecialty =
+                        GetDoctorSpecialty(
+                        doctorText);
+
+                        var isSelected =
+                        doctor.Value ==
+                        Model.DoctorId.ToString();
+
+                        <article class="appointment-doctor-result-card @(isSelected ? "is-selected" : "")"
+                                 data-doctor-card
+                                 data-doctor-name="@doctorName"
+                                 data-doctor-specialty="@doctorSpecialty">
+
+                            <div class="appointment-doctor-result-avatar"
+                                 aria-hidden="true">
+                                Dr
+                            </div>
+
+                            <div class="appointment-doctor-result-copy">
+                                <h3>
+                                    @doctorName
+                                </h3>
+
+                                <p>
+                                    @(string.IsNullOrWhiteSpace(
+                                                                doctorSpecialty)
+                                                                ? "Ιατρός"
+                                                                : doctorSpecialty)
+                        </p>
+                    </div>
+
+                            <div class="appointment-doctor-result-action">
+
+                        @if (isSelected)
+                                {
+                                    <span class="appointment-doctor-result-selected">
+                                        Επιλεγμένος
+                                    </span>
+                                }
+                                else
+                                {
+                                    <a asp-controller="Appointments"
+                                       asp-action="Create"
+                                       asp-route-doctorId="@doctor.Value"
+                                       asp-route-month="@monthStart.ToString("yyyy-MM-dd")"
+                                       class="btn btn-outline-dashboard appointment-doctor-select-btn">
+                                        Επιλογή
+                                    </a>
+                                }
+
+                            </div>
+
+                        </article>
+                    }
+
+                </div>
+
+                <div id="createDoctorEmpty"
+                     class="appointment-doctor-search-empty"
+                     hidden>
+
+                    <h3>
+                        Δεν βρέθηκαν ιατροί
+                    </h3>
+
+                    <p>
+                        Δοκιμάστε διαφορετικό όνομα
+                        ή ειδικότητα.
+                    </p>
+
+                </div>
+
+                <div id="createDoctorPagination"
+                     class="appointment-doctor-pagination"
+                     hidden>
+
+                    <button id="createDoctorPrevious"
+                            type="button"
+                            class="home-doctor-search-arrow"
+                            aria-label="Προηγούμενοι ιατροί">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+
+                            <path d="M15 18l-6-6 6-6">
+                            </path>
+
+                        </svg>
+                    </button>
+
+                    <span id="createDoctorPageIndicator"
+                          class="home-doctor-search-page">
+                    </span>
+
+                    <button id="createDoctorNext"
+                            type="button"
+                            class="home-doctor-search-arrow"
+                            aria-label="Επόμενοι ιατροί">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+
+                            <path d="M9 18l6-6-6-6">
+                            </path>
+
+                        </svg>
+                    </button>
+
+                </div>
+            }
+            else
+            {
+                <div class="appointment-doctor-search-empty">
+                    <h3>
+                        Δεν υπάρχουν διαθέσιμοι ιατροί
+                    </h3>
+
+                    <p>
+                        Δεν υπάρχει ενεργός ιατρός
+                        διαθέσιμος αυτή τη στιγμή.
+                    </p>
+                </div>
+            }
+
+        </section>
+
+        @if (Model.DoctorId > 0)
+        {
+            <form asp-action="Create"
+                  method="post"
+                  id="appointmentCreateForm">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       name="DoctorId"
+                       value="@Model.DoctorId" />
+
+                <input type="hidden"
+                       name="CalendarMonth"
+                       value="@monthStart.ToString("yyyy-MM-dd")" />
+
+                <section class="appointment-create-card">
+
+                    <div class="appointment-create-step appointment-create-step-split">
+
+                        <div class="appointment-create-step-title">
+                            <span>2</span>
+
+                            <div>
+                                <h2>Επιλογή ώρας</h2>
+
+                                <p>
+                                    @if (!string.IsNullOrWhiteSpace(
+                                                                    selectedDoctorName))
+                                    {
+                                        <span>
+                                            @selectedDoctorName
+
+                                            @if (!string.IsNullOrWhiteSpace(
+                                                                                selectedDoctorSpecialty))
+                                            {
+                                                <text>
+                                                    · @selectedDoctorSpecialty
+                                                </text>
+                                            }
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span>
+                                            Επιλέξτε διαθέσιμη ώρα
+                                            από το ημερολόγιο.
+                                        </span>
+                                    }
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="appointment-calendar-nav">
+
+                            @if (canGoPrevious)
+                            {
+                                <a asp-action="Create"
+                                   asp-route-doctorId="@Model.DoctorId"
+                                   asp-route-month="@previousMonth.ToString("yyyy-MM-dd")"
+                                   class="booking-nav-btn"
+                                   aria-label="Προηγούμενος μήνας">
+
+                                    <svg viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="2"
+                                         stroke-linecap="round"
+                                         stroke-linejoin="round"
+                                         aria-hidden="true">
+
+                                        <path d="M15 18l-6-6 6-6">
+                                        </path>
+                                    </svg>
+
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="booking-nav-btn booking-nav-btn-disabled"
+                                      aria-hidden="true">
+
+                                    <svg viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="2"
+                                         stroke-linecap="round"
+                                         stroke-linejoin="round">
+
+                                        <path d="M15 18l-6-6 6-6">
+                                        </path>
+                                    </svg>
+
+                                </span>
+                            }
+
+                            <strong>
+                                @monthStart.ToString(
+                                "MMMM yyyy",
+                                                        greekCulture)
+                        </strong>
+
+                        <a asp-action="Create"
+                           asp-route-doctorId="@Model.DoctorId"
+                           asp-route-month="@nextMonth.ToString("yyyy-MM-dd")"
+                           class="booking-nav-btn"
+                           aria-label="Επόμενος μήνας">
+
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="2"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 aria-hidden="true">
+
+                                <path d="M9 18l6-6-6-6">
+                                </path>
+
+                            </svg>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div class="appointment-calendar-legend">
+
+                    <span>
+                        <i class="legend-dot legend-available"></i>
+                        Διαθέσιμο
+                    </span>
+
+                    <span>
+                        <i class="legend-dot legend-booked"></i>
+                        Κλεισμένο
+                    </span>
+
+                    <span>
+                        <i class="legend-dot legend-unavailable"></i>
+                        Μη διαθέσιμο
+                    </span>
+
+                </div>
+
+                <div class="booking-calendar-shell appointment-calendar-shell">
+
+                    <div class="booking-calendar-days">
+
+                        @foreach (var dayName in dayNames)
+                            {
+                                <div>
+                                    @dayName
+                                </div>
+                            }
+
+                        </div>
+
+                        <div class="booking-calendar-grid">
+
+                            @foreach (var day in calendarDays)
+                            {
+                                var daySlots =
+                                Model.CalendarSlots
+                                .Where(s =>
+                                s.Date.Date ==
+                                day.Date)
+                                .OrderBy(s =>
+                                s.Time)
+                                .ToList();
+
+                                var isOtherMonth =
+                                day.Month !=
+                                monthStart.Month;
+
+                                var isPastDay =
+                                day.Date <
+                                DateTime.Today;
+
+                                <div class="booking-calendar-cell @(isOtherMonth ? "calendar-muted-day" : "") @(isPastDay ? "calendar-past-day" : "")">
+
+                                    <div class="booking-day-number">
+                                        <strong>
+                                            @day.Day
+                                        </strong>
+                                    </div>
+
+                                    <div class="booking-day-slots">
+
+                                        @foreach (var slot
+                                                                        in daySlots)
+                                        {
+                                            var slotValue =
+                                            slot.StartDateTime
+                                            .ToString(
+                                            "yyyy-MM-ddTHH:mm:ss");
+
+                                            var slotId =
+                                            "slot_" +
+                                            slot.StartDateTime
+                                            .ToString(
+                                            "yyyyMMddHHmm");
+
+                                            if (slot.IsBooked)
+                                            {
+                                                <span class="booking-slot booking-slot-booked">
+                                                    @slot.Time.ToString(@"hh\:mm")
+                                                </span>
+                                            }
+                                            else if (slot.IsUnavailable)
+                                            {
+                                                <span class="booking-slot booking-slot-unavailable">
+                                                    @slot.Time.ToString(@"hh\:mm")
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <div class="booking-slot-option">
+
+                                                    <input asp-for="SelectedSlot"
+                                                           type="radio"
+                                                           value="@slotValue"
+                                                           id="@slotId"
+                                                           class="booking-slot-radio"
+                                                           data-slot-label="@day.ToString("dddd, dd MMMM yyyy", greekCulture) στις @slot.Time.ToString(@"hh\:mm")" />
+
+                                                    <label for="@slotId"
+                                                           class="booking-slot booking-slot-available">
+
+                                                        @slot.Time.ToString(@"hh\:mm")
+
+                                                    </label>
+
+                                                </div>
+                                            }
+                                        }
+
+                                    </div>
+                                </div>
+                            }
+
+                        </div>
+                    </div>
+                </section>
+
+                <section class="appointment-create-card">
+
+                    <div class="appointment-create-step">
+                        <span>3</span>
+
+                        <div>
+                            <h2>Λόγος επίσκεψης</h2>
+
+                            <p>
+                                Γράψτε σύντομα τι αφορά το ραντεβού.
+                                Περισσότερες πληροφορίες μπορούν
+                                να συμπληρωθούν αργότερα.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div id="selectedSlotSummary"
+                         class="appointment-selected-slot"
+                         hidden>
+
+                        <span>
+                            Επιλεγμένη ώρα
+                        </span>
+
+                        <strong id="selectedSlotText">
+                            -
+                        </strong>
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label asp-for="Description"
+                               class="form-label form-label-custom">
+                            Περιγραφή
+                        </label>
+
+                        <textarea asp-for="Description"
+                                  class="form-control form-control-custom textarea-custom"
+                                  rows="5"
+                                  placeholder="Π.χ. πόνος στο γόνατο, επανέλεγχος, γενική εξέταση..."></textarea>
+
+                        <span asp-validation-for="Description"
+                              class="text-danger">
+                        </span>
+
+                    </div>
+
+                    <div class="form-actions appointment-create-actions">
+
+                        <button id="appointmentSubmitButton"
+                                type="submit"
+                                class="btn btn-primary-custom">
+                            Καταχώριση ραντεβού
+                        </button>
+
+                        <a asp-controller="PatientDashboard"
+                           asp-action="Index"
+                           class="btn btn-outline-dashboard">
+                            Επιστροφή στα ραντεβού
+                        </a>
+
+                    </div>
+
+                </section>
+
+            </form>
+        }
+
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            /*
+             * Doctor search
+             */
+
+            const doctorSearchInput =
+                document.getElementById("createDoctorSearch");
+
+            const doctorSpecialtySelect =
+                document.getElementById("createDoctorSpecialty");
+
+            const doctorCards =
+                Array.from(
+                    document.querySelectorAll(
+                        "[data-doctor-card]"
+                    )
+                );
+
+            const doctorEmpty =
+                document.getElementById("createDoctorEmpty");
+
+            const resultCount =
+                document.getElementById("createDoctorResultCount");
+
+            const pagination =
+                document.getElementById("createDoctorPagination");
+
+            const previousButton =
+                document.getElementById("createDoctorPrevious");
+
+            const nextButton =
+                document.getElementById("createDoctorNext");
+
+            const pageIndicator =
+                document.getElementById("createDoctorPageIndicator");
+
+            const pageSize = 6;
+
+            let currentPage = 1;
+
+
+            function normalizeSearchValue(value) {
+
+                return (value || "")
+                    .toLocaleLowerCase("el-GR")
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .trim();
+            }
+
+
+            function updateDoctorResults(
+                resetPage = false
+            ) {
+
+                if (!doctorSearchInput ||
+                    !doctorSpecialtySelect) {
+                    return;
+                }
+
+                if (resetPage) {
+                    currentPage = 1;
+                }
+
+                const search =
+                    normalizeSearchValue(
+                        doctorSearchInput.value
+                    );
+
+                const specialty =
+                    normalizeSearchValue(
+                        doctorSpecialtySelect.value
+                    );
+
+                const filteredCards =
+                    doctorCards.filter(
+                        function (card) {
+
+                            const name =
+                                normalizeSearchValue(
+                                    card.dataset.doctorName
+                                );
+
+                            const cardSpecialty =
+                                normalizeSearchValue(
+                                    card.dataset.doctorSpecialty
+                                );
+
+                            const matchesSearch =
+                                !search ||
+                                name.includes(search) ||
+                                cardSpecialty.includes(search);
+
+                            const matchesSpecialty =
+                                !specialty ||
+                                cardSpecialty === specialty;
+
+                            return matchesSearch &&
+                                   matchesSpecialty;
+                        }
+                    );
+
+
+                const totalPages =
+                    Math.max(
+                        1,
+                        Math.ceil(
+                            filteredCards.length /
+                            pageSize
+                        )
+                    );
+
+                if (currentPage > totalPages) {
+                    currentPage = totalPages;
+                }
+
+
+                doctorCards.forEach(
+                    function (card) {
+                        card.hidden = true;
+                    }
+                );
+
+
+                const startIndex =
+                    (currentPage - 1) *
+                    pageSize;
+
+                filteredCards
+                    .slice(
+                        startIndex,
+                        startIndex + pageSize
+                    )
+                    .forEach(
+                        function (card) {
+                            card.hidden = false;
+                        }
+                    );
+
+
+                if (doctorEmpty) {
+                    doctorEmpty.hidden =
+                        filteredCards.length > 0;
+                }
+
+
+                if (resultCount) {
+
+                    if (filteredCards.length === 1) {
+                        resultCount.textContent =
+                            "1 ιατρός";
+                    }
+                    else {
+                        resultCount.textContent =
+                            filteredCards.length +
+                            " ιατροί";
+                    }
+                }
+
+
+                if (pagination) {
+
+                    pagination.hidden =
+                        filteredCards.length <=
+                        pageSize;
+                }
+
+
+                if (previousButton) {
+
+                    previousButton.disabled =
+                        currentPage <= 1;
+                }
+
+
+                if (nextButton) {
+
+                    nextButton.disabled =
+                        currentPage >= totalPages;
+                }
+
+
+                if (pageIndicator) {
+
+                    pageIndicator.textContent =
+                        currentPage +
+                        " / " +
+                        totalPages;
+                }
+            }
+
+
+            if (doctorSearchInput) {
+
+                doctorSearchInput.addEventListener(
+                    "input",
+                    function () {
+                        updateDoctorResults(true);
+                    }
+                );
+            }
+
+
+            if (doctorSpecialtySelect) {
+
+                doctorSpecialtySelect.addEventListener(
+                    "change",
+                    function () {
+                        updateDoctorResults(true);
+                    }
+                );
+            }
+
+
+            if (previousButton) {
+
+                previousButton.addEventListener(
+                    "click",
+                    function () {
+
+                        if (currentPage <= 1) {
+                            return;
+                        }
+
+                        currentPage--;
+
+                        updateDoctorResults();
+                    }
+                );
+            }
+
+
+            if (nextButton) {
+
+                nextButton.addEventListener(
+                    "click",
+                    function () {
+
+                        currentPage++;
+
+                        updateDoctorResults();
+                    }
+                );
+            }
+
+
+            updateDoctorResults();
+
+
+            /*
+             * Appointment slot selection
+             */
+
+            const slotRadios =
+                document.querySelectorAll(
+                    ".booking-slot-radio"
+                );
+
+            const selectedSlotSummary =
+                document.getElementById(
+                    "selectedSlotSummary"
+                );
+
+            const selectedSlotText =
+                document.getElementById(
+                    "selectedSlotText"
+                );
+
+
+            function updateSelectedSlot() {
+
+                const selectedSlot =
+                    document.querySelector(
+                        ".booking-slot-radio:checked"
+                    );
+
+                if (!selectedSlot) {
+
+                    if (selectedSlotSummary) {
+                        selectedSlotSummary.hidden =
+                            true;
+                    }
+
+                    return;
+                }
+
+                if (selectedSlotSummary &&
+                    selectedSlotText) {
+
+                    selectedSlotText.textContent =
+                        selectedSlot.getAttribute(
+                            "data-slot-label"
+                        ) ||
+                        selectedSlot.value;
+
+                    selectedSlotSummary.hidden =
+                        false;
+                }
+            }
+
+
+            slotRadios.forEach(
+                function (radio) {
+
+                    radio.addEventListener(
+                        "change",
+                        updateSelectedSlot
+                    );
+                }
+            );
+
+
+            updateSelectedSlot();
+
+        });
+    </script>
+}

@@ -1,0 +1,372 @@
+﻿@model IEnumerable<MyDoc.Models.Notification>
+@using MyDoc.Models
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Ειδοποιήσεις";
+
+    var greekCulture =
+        new CultureInfo("el-GR");
+
+    var notifications =
+        Model
+            .OrderByDescending(x =>
+                x.CreatedAt)
+            .ToList();
+
+    var unreadCount =
+        notifications.Count(x =>
+            !x.IsRead);
+
+    var today =
+        DateTime.Today;
+
+    var weekStart =
+        today.AddDays(
+            -(((int)today.DayOfWeek + 6) % 7)
+        );
+
+    var todayNotifications =
+        notifications
+            .Where(x =>
+                x.CreatedAt.Date ==
+                today)
+            .ToList();
+
+    var weekNotifications =
+        notifications
+            .Where(x =>
+                x.CreatedAt.Date <
+                    today &&
+                x.CreatedAt.Date >=
+                    weekStart)
+            .ToList();
+
+    var olderNotifications =
+        notifications
+            .Where(x =>
+                x.CreatedAt.Date <
+                weekStart)
+            .ToList();
+
+    var groups = new[]
+    {
+        new
+        {
+            Title = "Σήμερα",
+            Items = todayNotifications
+        },
+
+        new
+        {
+            Title = "Αυτή την εβδομάδα",
+            Items = weekNotifications
+        },
+
+        new
+        {
+            Title = "Παλαιότερα",
+            Items = olderNotifications
+        }
+    };
+
+    string NormalizeNotificationText(string value)
+    {
+        var normalized =
+            value
+                .ToLowerInvariant()
+                .Normalize(
+                    System.Text.NormalizationForm.FormD);
+
+        var characters =
+            normalized
+                .Where(c =>
+                    CharUnicodeInfo.GetUnicodeCategory(c) !=
+                    UnicodeCategory.NonSpacingMark)
+                .ToArray();
+
+        return new string(characters)
+            .Normalize(
+                System.Text.NormalizationForm.FormC);
+    }
+
+    string GetTone(Notification notification)
+    {
+        var content =
+            NormalizeNotificationText(
+                $"{notification.Title} {notification.Message}");
+
+        if (content.Contains("ακυρ") ||
+            content.Contains("μη προσελευση"))
+        {
+            return "notification-tone-danger";
+        }
+
+        if (content.Contains("εγκρι") ||
+            content.Contains("ολοκληρω") ||
+            content.Contains("επιβεβαι"))
+        {
+            return "notification-tone-success";
+        }
+
+        if (content.Contains("μηνυμα"))
+        {
+            return "notification-tone-message";
+        }
+
+        if (content.Contains("αρχειο"))
+        {
+            return "notification-tone-document";
+        }
+
+        if (content.Contains("απορριφ") ||
+            content.Contains("εληξε") ||
+            content.Contains("δεν ειναι πλεον διαθεσιμ"))
+        {
+            return "notification-tone-warning";
+        }
+
+        return "notification-tone-info";
+    }
+
+    string GetGlyph(Notification notification)
+    {
+        var tone =
+            GetTone(notification);
+
+        return tone switch
+        {
+            "notification-tone-danger" => "×",
+            "notification-tone-success" => "✓",
+            "notification-tone-message" => "✉",
+            "notification-tone-document" => "🗀",
+            "notification-tone-warning" => "!",
+            _ => "i"
+        };
+    }
+
+    string GetDateLabel(
+        Notification notification)
+    {
+        if (notification.CreatedAt.Date ==
+            today)
+        {
+            return notification.CreatedAt
+                .ToString(
+                    "HH:mm",
+                    greekCulture);
+        }
+
+        if (notification.CreatedAt.Date ==
+            today.AddDays(-1))
+        {
+            return
+                "Χθες, " +
+                notification.CreatedAt
+                    .ToString(
+                        "HH:mm",
+                        greekCulture);
+        }
+
+        if (notification.CreatedAt.Date >=
+            weekStart)
+        {
+            return notification.CreatedAt
+                .ToString(
+                    "dddd, HH:mm",
+                    greekCulture);
+        }
+
+        return notification.CreatedAt
+            .ToString(
+                "dd/MM/yyyy HH:mm",
+                greekCulture);
+    }
+}
+
+<section class="dashboard-page notifications-page">
+    <div class="container">
+
+        <header class="notifications-page-header">
+
+            <div>
+                <span class="notifications-page-kicker">
+                    Κέντρο ενημερώσεων
+                </span>
+
+                <h1>
+                    Ειδοποιήσεις
+                </h1>
+
+                @if (unreadCount > 0)
+                {
+                    <p>
+                        Έχετε
+                        <strong>
+                            @unreadCount
+                        </strong>
+                        @(unreadCount == 1
+                                            ? "μη αναγνωσμένη ειδοποίηση."
+                                            : "μη αναγνωσμένες ειδοποιήσεις.")
+                </p>
+                                }
+                else
+                {
+                    <p>
+                        Δεν υπάρχουν νέες ειδοποιήσεις.
+                    </p>
+                }
+            </div>
+
+            @if (unreadCount > 0)
+            {
+                <form asp-controller="Notifications"
+                      asp-action="MarkAllAsRead"
+                      method="post">
+
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit"
+                            class="btn btn-outline-dashboard notifications-read-all">
+                        Σήμανση όλων ως αναγνωσμένων
+                    </button>
+
+                </form>
+            }
+
+        </header>
+
+        <section class="notifications-shell">
+
+            @if (!notifications.Any())
+            {
+                <div class="notifications-empty">
+
+                    <div class="notifications-empty-icon"
+                         aria-hidden="true">
+                        ✓
+                    </div>
+
+                    <h2>
+                        Είστε ενημερωμένοι
+                    </h2>
+
+                    <p>
+                        Οι σημαντικές ενημερώσεις
+                        για τα ραντεβού σας θα
+                        εμφανίζονται εδώ.
+                    </p>
+
+                </div>
+            }
+            else
+            {
+                @foreach (var group in groups)
+                {
+                    if (!group.Items.Any())
+                    {
+                        continue;
+                    }
+
+                    <section class="notification-group">
+
+                        <div class="notification-group-heading">
+
+                            <h2>
+                                @group.Title
+                            </h2>
+
+                            <span>
+                                @group.Items.Count
+                            </span>
+
+                        </div>
+
+                        <div class="notification-feed">
+
+                            @foreach (var notification
+                                                in group.Items)
+                            {
+                                var tone =
+                                GetTone(notification);
+
+                                var unreadClass =
+                                notification.IsRead
+                                ? ""
+                                : "notification-feed-item-unread";
+
+                                <a asp-controller="Notifications"
+                                   asp-action="Open"
+                                   asp-route-id="@notification.Id"
+                                   class="notification-feed-item @tone @unreadClass">
+
+                                    <div class="notification-feed-icon"
+                                         aria-hidden="true">
+                                        @GetGlyph(notification)
+                                    </div>
+
+                                    <div class="notification-feed-main">
+
+                                        <div class="notification-feed-title-row">
+
+                                            <h3>
+                                                @notification.Title
+                                            </h3>
+
+                                            @if (!notification.IsRead)
+                                            {
+                                                <span class="notification-feed-new-label">
+                                                    Νέα
+                                                </span>
+                                            }
+
+                                        </div>
+
+                                        <p>
+                                            @notification.Message
+                                        </p>
+
+                                        <time datetime="@notification.CreatedAt.ToString("O")">
+                                            @GetDateLabel(notification)
+                                        </time>
+
+                                    </div>
+
+                                    <div class="notification-feed-side">
+
+                                        @if (!notification.IsRead)
+                                        {
+                                            <span class="notification-unread-dot"
+                                                  aria-label="Μη αναγνωσμένη">
+                                            </span>
+                                        }
+
+                                        <svg class="notification-feed-chevron"
+                                             viewBox="0 0 24 24"
+                                             fill="none"
+                                             stroke="currentColor"
+                                             stroke-width="2"
+                                             stroke-linecap="round"
+                                             stroke-linejoin="round"
+                                             aria-hidden="true">
+
+                                            <path d="M9 18l6-6-6-6">
+                                            </path>
+
+                                        </svg>
+
+                                    </div>
+
+                                </a>
+                            }
+
+                        </div>
+
+                    </section>
+                }
+            }
+
+        </section>
+
+    </div>
+</section>

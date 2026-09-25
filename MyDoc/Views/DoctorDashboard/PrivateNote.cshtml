@@ -1,0 +1,161 @@
+﻿@model MyDoc.Models.AppointmentPrivateNoteVM
+@using MyDoc.Models
+
+@{
+    ViewData["Title"] = "Προσωπική σημείωση";
+
+    var hasExistingNote =
+        !string.IsNullOrWhiteSpace(Model.Notes);
+
+    string GetStatusText(AppointmentStatus status) => status switch
+    {
+        AppointmentStatus.Pending => "Σε αναμονή",
+        AppointmentStatus.Approved => "Εγκεκριμένο",
+        AppointmentStatus.Cancelled => "Ακυρωμένο",
+        AppointmentStatus.Expired => "Έληξε",
+        AppointmentStatus.Completed => "Ολοκληρωμένο",
+        AppointmentStatus.NoShow => "Μη προσέλευση",
+        _ => status.ToString()
+    };
+
+    string GetStatusClass(AppointmentStatus status) => status switch
+    {
+        AppointmentStatus.Pending => "status-badge status-pending",
+        AppointmentStatus.Approved => "status-badge status-approved",
+        AppointmentStatus.Cancelled => "status-badge status-cancelled",
+        AppointmentStatus.Expired => "status-badge status-expired",
+        AppointmentStatus.Completed => "status-badge status-approved",
+        AppointmentStatus.NoShow => "status-badge status-cancelled",
+        _ => "status-badge"
+    };
+}
+
+<section class="dashboard-page doctor-private-note-page private-note-modern">
+    <div class="container">
+
+        <div class="action-page-shell action-page-shell-note">
+
+            <a asp-controller="DoctorDashboard"
+               asp-action="Details"
+               asp-route-id="@Model.AppointmentId"
+               asp-route-activeTab="notes"
+               class="appointment-back-link">
+                ← Ραντεβού
+            </a>
+
+            <header class="action-page-header private-note-modern-header">
+
+                <div>
+                    <span class="action-page-eyebrow">
+                        Προσωπική σημείωση
+                    </span>
+
+                    <h1>
+                        @(hasExistingNote
+                                                ? "Επεξεργασία σημείωσης"
+                                                : "Νέα σημείωση")
+                    </h1>
+                </div>
+
+                <div class="private-note-lock-chip">
+                    <svg viewBox="0 0 24 24"
+                         aria-hidden="true">
+                        <rect x="6"
+                              y="10"
+                              width="12"
+                              height="9"
+                              rx="2" />
+
+                        <path d="M9 10V7a3 3 0 0 1 6 0v3" />
+                    </svg>
+
+                    Ιδιωτική
+                </div>
+
+            </header>
+
+            <div class="private-note-context-row">
+
+                <div>
+                    <span>Ασθενής</span>
+                    <strong>@Model.PatientName</strong>
+                </div>
+
+                <div>
+                    <span>Ραντεβού</span>
+                    <strong>
+                        @Model.AppointmentDate.ToString(
+                                                "dd/MM/yyyy · HH:mm")
+                    </strong>
+                </div>
+
+                <span class="@GetStatusClass(Model.AppointmentStatus)">
+                    @GetStatusText(Model.AppointmentStatus)
+                </span>
+
+            </div>
+
+            <form asp-action="PrivateNote"
+                  method="post"
+                  class="private-note-modern-card">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       asp-for="AppointmentId" />
+
+                <div asp-validation-summary="All"
+                     class="text-danger doctor-private-note-validation">
+                </div>
+
+                <div class="private-note-field-header">
+                    <label asp-for="Notes">
+                        Σημείωση
+                    </label>
+
+                    <span>
+                        Ο ασθενής δεν έχει πρόσβαση σε αυτή.
+                    </span>
+                </div>
+
+                <textarea asp-for="Notes"
+                          class="private-note-modern-textarea"
+                          rows="8"
+                          maxlength="4000"
+                          placeholder="Γράψτε ό,τι θέλετε να θυμάστε για το συγκεκριμένο ραντεβού..."></textarea>
+
+                <span asp-validation-for="Notes"
+                      class="text-danger">
+                </span>
+
+                <div class="modern-form-actions">
+
+                    <button type="submit"
+                            class="btn btn-primary-custom">
+
+                        @(hasExistingNote
+                                                ? "Αποθήκευση αλλαγών"
+                                                : "Αποθήκευση σημείωσης")
+
+                    </button>
+
+                    <a asp-controller="DoctorDashboard"
+                       asp-action="Details"
+                       asp-route-id="@Model.AppointmentId"
+                       asp-route-activeTab="notes"
+                       class="btn btn-outline-dashboard">
+                        Πίσω
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

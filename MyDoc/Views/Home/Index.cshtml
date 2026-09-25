@@ -1,0 +1,1128 @@
+﻿@model MyDoc.Models.HomeIndexVM
+@using MyDoc.Models
+
+@{
+    ViewData["Title"] = "Αρχική";
+
+    string GetStatusClass(AppointmentStatus status) => status switch
+    {
+        AppointmentStatus.Pending => "status-badge status-pending",
+        AppointmentStatus.Approved => "status-badge status-approved",
+        AppointmentStatus.Cancelled => "status-badge status-cancelled",
+        AppointmentStatus.Expired => "status-badge status-expired",
+        AppointmentStatus.Completed => "status-badge status-approved",
+        AppointmentStatus.NoShow => "status-badge status-cancelled",
+        _ => "status-badge"
+    };
+}
+
+<section class="hero-section">
+    <div class="hero-overlay"></div>
+
+    <div class="container hero-content">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <span class="hero-badge">Σύστημα Ραντεβού MyDoc</span>
+
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    if (User.IsInRole("Patient"))
+                    {
+                        <h1 class="hero-title">Καλώς ήρθατε πίσω στο MyDoc</h1>
+                        <p class="hero-text">
+                            Δείτε το επόμενο ραντεβού σας, συμπληρώστε τις απαραίτητες πληροφορίες
+                            και κλείστε νέο ραντεβού με διαθέσιμο ιατρό.
+                        </p>
+                    }
+                    else if (User.IsInRole("Doctor"))
+                    {
+                        <h1 class="hero-title">Η σημερινή σας εικόνα με μια ματιά</h1>
+                        <p class="hero-text">
+                            Ελέγξτε τα σημερινά ραντεβού, τα pending αιτήματα και τις αλλαγές ραντεβού
+                            που χρειάζονται απάντηση.
+                        </p>
+                    }
+                    else if (User.IsInRole("Admin"))
+                    {
+                        <h1 class="hero-title">Κεντρική εικόνα λειτουργίας MyDoc</h1>
+                        <p class="hero-text">
+                            Γρήγορη πρόσβαση στη διαχείριση γιατρών, ασθενών και ραντεβού.
+                        </p>
+                    }
+                }
+                else
+                {
+                    <h1 class="hero-title">Βρείτε ιατρό και κλείστε ραντεβού πιο εύκολα</h1>
+                    <p class="hero-text">
+                        Αναζητήστε διαθέσιμους ιατρούς ανά όνομα ή ειδικότητα και δείτε γρήγορα
+                        πότε υπάρχει διαθέσιμη ώρα για ραντεβού.
+                    </p>
+                }
+
+                <div class="hero-actions">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        if (User.IsInRole("Patient"))
+                        {
+                            <a asp-controller="Appointments" asp-action="Create" class="btn btn-primary-custom btn-lg me-2 mb-2">
+                                Νέο Ραντεβού
+                            </a>
+
+                            <a asp-controller="PatientDashboard" asp-action="Index" class="btn btn-outline-light-custom btn-lg mb-2">
+                                Τα Ραντεβού μου
+                            </a>
+                        }
+                        else if (User.IsInRole("Doctor"))
+                        {
+                            <a asp-controller="DoctorDashboard" asp-action="Index" class="btn btn-primary-custom btn-lg me-2 mb-2">
+                                Ραντεβού Ιατρού
+                            </a>
+
+                            <a asp-controller="DoctorDashboard" asp-action="Schedule" class="btn btn-outline-light-custom btn-lg mb-2">
+                                Το Πρόγραμμά μου
+                            </a>
+                        }
+                        else if (User.IsInRole("Admin"))
+                        {
+                            <a asp-controller="AdminDashboard" asp-action="Index" class="btn btn-primary-custom btn-lg me-2 mb-2">
+                                Admin Dashboard
+                            </a>
+
+                            <a asp-controller="Doctors" asp-action="Create" class="btn btn-outline-light-custom btn-lg mb-2">
+                                Νέος Γιατρός
+                            </a>
+                        }
+                    }
+                    else
+                    {
+                        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary-custom btn-lg me-2 mb-2">
+                            Σύνδεση
+                        </a>
+
+                        <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-outline-light-custom btn-lg mb-2">
+                            Εγγραφή Ασθενή
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <section class="section-block bg-light-soft">
+        <div class="container">
+            @if (User.IsInRole("Patient"))
+            {
+                <div class="section-heading text-center">
+                    <h2>Η εικόνα σας σήμερα</h2>
+                    <p>Γρήγορη πρόσβαση στα σημαντικότερα στοιχεία των ραντεβού σας.</p>
+                </div>
+
+                <div class="row g-4 dashboard-stats">
+                    <div class="col-md-4">
+                        <div class="dashboard-stat-card">
+                            <span class="stat-label">Pending Ραντεβού</span>
+                            <strong class="stat-value">@Model.PatientPendingAppointments</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="dashboard-stat-card">
+                            <span class="stat-label">Approved Ραντεβού</span>
+                            <strong class="stat-value">@Model.PatientApprovedAppointments</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="dashboard-stat-card">
+                            <span class="stat-label">Intake που εκκρεμεί</span>
+                            <strong class="stat-value">@Model.PatientMissingIntakeCount</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-content-card mt-4">
+                    <div class="dashboard-card-header">
+                        <h2>Επόμενο Ραντεβού</h2>
+                        <p>Το πιο κοντινό ενεργό ραντεβού σας.</p>
+                    </div>
+
+                    @if (Model.NextPatientAppointment == null)
+                    {
+                        <div class="empty-state-box">
+                            <h3>Δεν υπάρχει επόμενο ενεργό ραντεβού</h3>
+                            <p>Μπορείτε να κλείσετε νέο ραντεβού με διαθέσιμο ιατρό.</p>
+
+                            <a asp-controller="Appointments" asp-action="Create" class="btn btn-primary-custom">
+                                Κλείσιμο Ραντεβού
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="details-grid">
+                            <div class="details-item">
+                                <span class="details-label">Ημερομηνία</span>
+                                <strong>@Model.NextPatientAppointment.AppointmentDate.ToString("dd/MM/yyyy HH:mm")</strong>
+                            </div>
+
+                            <div class="details-item">
+                                <span class="details-label">Κατάσταση</span>
+                                <span class="@GetStatusClass(Model.NextPatientAppointment.Status)">
+                                    @Model.NextPatientAppointment.Status
+                                </span>
+                            </div>
+
+                            <div class="details-item">
+                                <span class="details-label">Ιατρός</span>
+                                <strong>
+                                    @Model.NextPatientAppointment.Doctor.FirstName
+                                    @Model.NextPatientAppointment.Doctor.LastName
+                                </strong>
+                            </div>
+
+                            <div class="details-item">
+                                <span class="details-label">Ειδικότητα</span>
+                                <strong>@Model.NextPatientAppointment.Doctor.Specialty</strong>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <a asp-controller="Appointments"
+                               asp-action="Details"
+                               asp-route-id="@Model.NextPatientAppointment.Id"
+                               class="btn btn-primary-custom">
+                                Προβολή Ραντεβού
+                            </a>
+
+                            <a asp-controller="PatientDashboard" asp-action="Index" class="btn btn-outline-dashboard">
+                                Όλα τα Ραντεβού
+                            </a>
+                        </div>
+                    }
+                </div>
+            }
+            else if (User.IsInRole("Doctor"))
+            {
+                <div class="section-heading text-center">
+                    <h2>Η σημερινή εικόνα του ιατρού</h2>
+                    <p>Τα βασικά στοιχεία που χρειάζονται άμεση προσοχή.</p>
+                </div>
+
+                <div class="row g-4 dashboard-stats">
+                    <div class="col-md-4">
+                        <div class="dashboard-stat-card">
+                            <span class="stat-label">Σήμερα</span>
+                            <strong class="stat-value">@Model.DoctorTodayAppointments</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="dashboard-stat-card">
+                            <span class="stat-label">Pending Ραντεβού</span>
+                            <strong class="stat-value">@Model.DoctorPendingAppointments</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="dashboard-stat-card">
+                            <span class="stat-label">Αιτήματα Αλλαγής</span>
+                            <strong class="stat-value">@Model.DoctorPendingRescheduleRequests</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-content-card mt-4">
+                    <div class="dashboard-card-header">
+                        <h2>Επόμενο Ραντεβού</h2>
+                        <p>Το πιο κοντινό ενεργό ραντεβού στο πρόγραμμά σας.</p>
+                    </div>
+
+                    @if (Model.DoctorNextAppointment == null)
+                    {
+                        <div class="empty-state-box">
+                            <h3>Δεν υπάρχει επόμενο ενεργό ραντεβού</h3>
+                            <p>Μπορείτε να ελέγξετε ή να ενημερώσετε το εβδομαδιαίο πρόγραμμά σας.</p>
+
+                            <a asp-controller="DoctorDashboard" asp-action="Schedule" class="btn btn-primary-custom">
+                                Το Πρόγραμμά μου
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="details-grid">
+                            <div class="details-item">
+                                <span class="details-label">Ημερομηνία</span>
+                                <strong>@Model.DoctorNextAppointment.AppointmentDate.ToString("dd/MM/yyyy HH:mm")</strong>
+                            </div>
+
+                            <div class="details-item">
+                                <span class="details-label">Κατάσταση</span>
+                                <span class="@GetStatusClass(Model.DoctorNextAppointment.Status)">
+                                    @Model.DoctorNextAppointment.Status
+                                </span>
+                            </div>
+
+                            <div class="details-item details-item-full">
+                                <span class="details-label">Ασθενής</span>
+                                <strong>
+                                    @(Model.DoctorNextAppointment.Patient != null
+                                                            ? $"{Model.DoctorNextAppointment.Patient.FirstName} {Model.DoctorNextAppointment.Patient.LastName}"
+                                                            : "-")
+                    </strong>
+                </div>
+            </div>
+
+                        <div class="form-actions">
+                            <a asp-controller="DoctorDashboard"
+                               asp-action="Details"
+                               asp-route-id="@Model.DoctorNextAppointment.Id"
+                               class="btn btn-primary-custom">
+                                Προβολή Ραντεβού
+                            </a>
+
+                            <a asp-controller="DoctorDashboard" asp-action="Index" class="btn btn-outline-dashboard">
+                                Όλα τα Ραντεβού
+                            </a>
+                        </div>
+                        }
+                </div>
+            }
+            else if (User.IsInRole("Admin"))
+            {
+                <div class="section-heading text-center">
+                    <h2>Σύνοψη Συστήματος</h2>
+                    <p>Γρήγορη εικόνα της λειτουργίας του MyDoc.</p>
+                </div>
+
+                <div class="row g-4 dashboard-stats">
+                    <div class="col-md-3">
+                        <div class="dashboard-stat-card">
+                            <span class="stat-label">Active Doctors</span>
+                            <strong class="stat-value">@Model.AdminActiveDoctors</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="dashboard-stat-card">
+                            <span class="stat-label">Active Patients</span>
+                            <strong class="stat-value">@Model.AdminActivePatients</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="dashboard-stat-card">
+                            <span class="stat-label">Today Active</span>
+                            <strong class="stat-value">@Model.AdminTodayAppointments</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="dashboard-stat-card">
+                            <span class="stat-label">Pending</span>
+                            <strong class="stat-value">@Model.AdminPendingAppointments</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-content-card mt-4">
+                    <div class="dashboard-card-header">
+                        <h2>Γρήγορες Ενέργειες</h2>
+                        <p>Άμεση πρόσβαση στη βασική διαχείριση του συστήματος.</p>
+                    </div>
+
+                    <div class="form-actions">
+                        <a asp-controller="Doctors" asp-action="Index" class="btn btn-primary-custom">
+                            Manage Doctors
+                        </a>
+
+                        <a asp-controller="Patients" asp-action="Index" class="btn btn-outline-dashboard">
+                            Manage Patients
+                        </a>
+
+                        <a asp-controller="Appointments" asp-action="Index" class="btn btn-outline-dashboard">
+                            Manage Appointments
+                        </a>
+
+                        <a asp-controller="Doctors" asp-action="Create" class="btn btn-outline-dashboard">
+                            Νέος Γιατρός
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+}
+@if (!(User.Identity?.IsAuthenticated == true && User.IsInRole("Doctor")))
+{
+<section id="doctors" class="section-block">
+    <div class="container">
+        <div class="section-heading text-center">
+            <h2>Αναζήτηση Ιατρού</h2>
+            <p>Βρείτε ενεργούς ιατρούς ανά όνομα ή ειδικότητα και δείτε την επόμενη διαθέσιμη ώρα.</p>
+        </div>
+
+        <div class="dashboard-content-card mb-4">
+                <div class="dashboard-content-card mb-4">
+                    <form id="doctorSearchForm">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-5">
+                                <label for="doctorSearchInput"
+                                       class="form-label form-label-custom">
+                                    Αναζήτηση
+                                </label>
+
+                                <input id="doctorSearchInput"
+                                       type="text"
+                                       name="search"
+                                       value="@Model.Search"
+                                       class="form-control form-control-custom"
+                                       placeholder="Όνομα, επίθετο ή ειδικότητα" />
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="doctorSpecialtySelect"
+                                       class="form-label form-label-custom">
+                                    Ειδικότητα
+                                </label>
+
+                                <select id="doctorSpecialtySelect"
+                                        name="specialty"
+                                        class="form-select form-control-custom">
+
+                                    <option value="">Όλες οι ειδικότητες</option>
+
+                                    @foreach (var specialty in Model.Specialties)
+                                    {
+                                        if (Model.Specialty == specialty)
+                                        {
+                                            <option value="@specialty" selected>
+                                                @specialty
+                                            </option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@specialty">
+                                                @specialty
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <button id="doctorSearchButton"
+                                        type="submit"
+                                        class="btn btn-primary-custom w-100">
+                                    Αναζήτηση
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+        </div>
+
+            <div class="home-doctor-results-shell">
+
+                <div id="doctorSearchLoading"
+                     class="home-doctor-search-loader"
+                     hidden>
+
+                    <div class="home-doctor-search-spinner"
+                         aria-hidden="true">
+                    </div>
+
+                    <span>Αναζήτηση διαθέσιμων ιατρών...</span>
+                </div>
+
+
+                <div id="doctorSearchEmpty"
+                     class="empty-state-box home-doctor-search-empty"
+                     @(Model.Doctors.Any() ? "hidden" : "")>
+
+                    <h3>Δεν βρέθηκαν ιατροί</h3>
+
+                    <p>
+                        Δοκιμάστε διαφορετικό όνομα ή ειδικότητα.
+                    </p>
+                </div>
+
+
+                <div id="doctorResultsViewport"
+                     class="home-doctor-results-viewport">
+
+                    <div id="doctorSearchResults"
+                         class="row g-4 home-doctor-results-grid">
+
+                        @foreach (var doctor in Model.Doctors)
+                        {
+                            <div class="col-md-6 col-xl-3 doctor-search-result">
+                                <div class="feature-card">
+                                    <div class="feature-icon">
+                                        Dr
+                                    </div>
+
+                                    <h4>@doctor.FullName</h4>
+
+                                    <p class="mb-2">
+                                        <strong>@doctor.Specialty</strong>
+                                    </p>
+
+                                    @if (doctor.NextAvailableSlot.HasValue)
+                                    {
+                                        <p>
+                                            Επόμενη διαθέσιμη ώρα:
+                                            <br />
+
+                                            <strong>
+                                                @doctor.NextAvailableSlot.Value.ToString("dd/MM/yyyy HH:mm")
+                                            </strong>
+                                        </p>
+                                    }
+                                    else
+                                    {
+                                        <p>
+                                            Δεν βρέθηκε διαθέσιμη ώρα τις επόμενες 14 ημέρες.
+                                        </p>
+                                    }
+
+                                    <div class="mt-3">
+                                        <a asp-area="Identity"
+                                           asp-page="/Account/Login"
+                                           class="btn btn-primary-custom w-100">
+                                            Σύνδεση για Ραντεβού
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+                </div>
+
+
+                <div id="doctorSearchNavigation"
+                     class="home-doctor-search-navigation"
+                     hidden>
+
+                    <button id="doctorSearchPrevious"
+                            type="button"
+                            class="home-doctor-search-arrow"
+                            aria-label="Προηγούμενα αποτελέσματα">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+                            <path d="M15 18l-6-6 6-6"></path>
+                        </svg>
+                    </button>
+
+
+                    <span id="doctorSearchPageIndicator"
+                          class="home-doctor-search-page">
+                    </span>
+
+
+                    <button id="doctorSearchNext"
+                            type="button"
+                            class="home-doctor-search-arrow"
+                            aria-label="Επόμενα αποτελέσματα">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+                            <path d="M9 18l6-6-6-6"></path>
+                        </svg>
+                    </button>
+
+                </div>
+
+            </div>
+
+    </div>
+</section>
+}
+
+@if (!(User.Identity?.IsAuthenticated ?? false))
+{
+    <section class="section-block bg-light-soft">
+        <div class="container">
+            <div class="section-heading text-center">
+                <h2>Πώς λειτουργεί</h2>
+                <p>Η διαδικασία είναι απλή και οργανωμένη από την αρχή μέχρι την επιβεβαίωση.</p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">1</div>
+                        <h4>Βρείτε ιατρό</h4>
+                        <p>Αναζητήστε διαθέσιμο ιατρό ανά όνομα ή ειδικότητα.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">2</div>
+                        <h4>Επιλέξτε ώρα</h4>
+                        <p>Δείτε διαθέσιμες ώρες και στείλτε αίτημα ραντεβού.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">3</div>
+                        <h4>Παρακολουθήστε την πορεία</h4>
+                        <p>Λάβετε ενημέρωση όταν το ραντεβού εγκριθεί, αλλάξει ή ακυρωθεί.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+<section class="section-block contact-strip">
+    <div class="container">
+        <div class="row g-4 align-items-center">
+            <div class="col-lg-8">
+                <h2>Επικοινωνία & Υποστήριξη</h2>
+                <p class="mb-0">
+                    Για πληροφορίες σχετικά με τη χρήση της πλατφόρμας ή τη διαχείριση ραντεβού,
+                    μπορείτε να επικοινωνήσετε με την υποστήριξη.
+                </p>
+            </div>
+
+            <div class="col-lg-4 text-lg-end">
+                <a asp-controller="Home"
+                   asp-action="Contact"
+                   class="btn btn-primary-custom">
+                    Επικοινωνία
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const form =
+                document.getElementById("doctorSearchForm");
+
+            if (!form) {
+                return;
+            }
+
+            const searchInput =
+                document.getElementById("doctorSearchInput");
+
+            const specialtySelect =
+                document.getElementById("doctorSpecialtySelect");
+
+            const searchButton =
+                document.getElementById("doctorSearchButton");
+
+            const resultsViewport =
+                document.getElementById("doctorResultsViewport");
+
+            const resultsContainer =
+                document.getElementById("doctorSearchResults");
+
+            const emptyState =
+                document.getElementById("doctorSearchEmpty");
+
+            const loadingState =
+                document.getElementById("doctorSearchLoading");
+
+            const navigation =
+                document.getElementById("doctorSearchNavigation");
+
+            const previousButton =
+                document.getElementById("doctorSearchPrevious");
+
+            const nextButton =
+                document.getElementById("doctorSearchNext");
+
+            const pageIndicator =
+                document.getElementById("doctorSearchPageIndicator");
+
+            let currentPage = 1;
+            let isLoading = false;
+
+
+            form.addEventListener("submit", async function (event) {
+                event.preventDefault();
+
+                currentPage = 1;
+
+                await loadDoctors();
+            });
+
+
+            previousButton.addEventListener("click", async function () {
+
+                if (isLoading || currentPage <= 1) {
+                    return;
+                }
+
+                currentPage--;
+
+                await loadDoctors("previous");
+            });
+
+
+            nextButton.addEventListener("click", async function () {
+
+                if (isLoading) {
+                    return;
+                }
+
+                currentPage++;
+
+                await loadDoctors("next");
+            });
+
+
+            async function loadDoctors(direction = "search") {
+
+                if (isLoading) {
+                    return;
+                }
+
+                isLoading = true;
+
+                const search =
+                    searchInput.value.trim();
+
+                const specialty =
+                    specialtySelect.value;
+
+                const params =
+                    new URLSearchParams();
+
+                if (search) {
+                    params.set("search", search);
+                }
+
+                if (specialty) {
+                    params.set("specialty", specialty);
+                }
+
+                params.set(
+                    "page",
+                    currentPage.toString()
+                );
+
+                const loadingStartedAt =
+                    performance.now();
+
+                searchButton.disabled = true;
+                previousButton.disabled = true;
+                nextButton.disabled = true;
+
+                /*
+                 * Πρώτα εξαφανίζουμε ομαλά
+                 * την υπάρχουσα τετράδα.
+                 */
+                resultsViewport.classList.add(
+                    "is-leaving"
+                );
+
+                navigation.classList.add(
+                    "is-hidden"
+                );
+
+                await wait(180);
+
+                resultsViewport.hidden = true;
+                emptyState.hidden = true;
+
+                loadingState.hidden = false;
+
+                requestAnimationFrame(function () {
+                    loadingState.classList.add(
+                        "is-visible"
+                    );
+                });
+
+
+                try {
+
+                    const response = await fetch(
+                        '@Url.Action("SearchDoctors", "Home")?' +
+                        params.toString(),
+                        {
+                            headers: {
+                                "X-Requested-With":
+                                    "XMLHttpRequest"
+                            }
+                        }
+                    );
+
+                    if (!response.ok) {
+                        throw new Error(
+                            "Η αναζήτηση δεν ολοκληρώθηκε."
+                        );
+                    }
+
+                    const data =
+                        await response.json();
+
+
+                    /*
+                     * Αποφεύγουμε το πολύ γρήγορο flash
+                     * του loader όταν η απάντηση έρθει
+                     * σχεδόν αμέσως.
+                     */
+                    const elapsed =
+                        performance.now() -
+                        loadingStartedAt;
+
+                    const minimumLoadingTime = 450;
+
+                    if (elapsed < minimumLoadingTime) {
+                        await wait(
+                            minimumLoadingTime - elapsed
+                        );
+                    }
+
+
+                    loadingState.classList.remove(
+                        "is-visible"
+                    );
+
+                    await wait(140);
+
+                    loadingState.hidden = true;
+
+
+                    resultsContainer.innerHTML = "";
+
+                    if (!data.doctors.length) {
+
+                        currentPage = 1;
+
+                        emptyState.hidden = false;
+
+                        navigation.hidden = true;
+
+                        updateAddressBar(
+                            search,
+                            specialty
+                        );
+
+                        return;
+                    }
+
+
+                    data.doctors.forEach(
+                        function (doctor) {
+
+                            resultsContainer.appendChild(
+                                createDoctorCard(doctor)
+                            );
+
+                        }
+                    );
+
+
+                    /*
+                     * Ο server μπορεί να διορθώσει το page
+                     * αν ζητήσαμε αριθμό εκτός ορίων.
+                     */
+                    currentPage = data.page;
+
+
+                    resultsViewport.hidden = false;
+
+                    resultsViewport.classList.remove(
+                        "is-leaving",
+                        "is-entering",
+                        "from-left",
+                        "from-right"
+                    );
+
+
+                    if (direction === "next") {
+                        resultsViewport.classList.add(
+                            "is-entering",
+                            "from-right"
+                        );
+                    }
+                    else if (direction === "previous") {
+                        resultsViewport.classList.add(
+                            "is-entering",
+                            "from-left"
+                        );
+                    }
+                    else {
+                        resultsViewport.classList.add(
+                            "is-entering"
+                        );
+                    }
+
+
+                    requestAnimationFrame(function () {
+
+                        requestAnimationFrame(function () {
+
+                            resultsViewport.classList.remove(
+                                "is-entering",
+                                "from-left",
+                                "from-right"
+                            );
+
+                        });
+
+                    });
+
+
+                    updateNavigation(data);
+
+                    updateAddressBar(
+                        search,
+                        specialty
+                    );
+                }
+                catch (error) {
+
+                    loadingState.classList.remove(
+                        "is-visible"
+                    );
+
+                    await wait(120);
+
+                    loadingState.hidden = true;
+
+                    resultsContainer.innerHTML = "";
+                    resultsViewport.hidden = true;
+
+                    emptyState.hidden = false;
+
+                    emptyState.querySelector("h3")
+                        .textContent =
+                        "Δεν ήταν δυνατή η αναζήτηση";
+
+                    emptyState.querySelector("p")
+                        .textContent =
+                        "Δοκιμάστε ξανά σε λίγο.";
+
+                    navigation.hidden = true;
+                }
+                finally {
+
+                    searchButton.disabled = false;
+                    previousButton.disabled = false;
+                    nextButton.disabled = false;
+
+                    isLoading = false;
+                }
+            }
+
+
+            function updateNavigation(data) {
+
+                const hasNavigation =
+                    data.totalPages > 1 &&
+                    (
+                        searchInput.value.trim() ||
+                        specialtySelect.value
+                    );
+
+                navigation.hidden =
+                    !hasNavigation;
+
+                if (!hasNavigation) {
+                    return;
+                }
+
+                previousButton.disabled =
+                    !data.hasPrevious;
+
+                nextButton.disabled =
+                    !data.hasNext;
+
+                pageIndicator.textContent =
+                    data.page +
+                    " / " +
+                    data.totalPages;
+
+                navigation.classList.remove(
+                    "is-hidden"
+                );
+            }
+
+
+            function createDoctorCard(doctor) {
+
+                const column =
+                    document.createElement("div");
+
+                column.className =
+                    "col-md-6 col-xl-3 doctor-search-result";
+
+
+                const card =
+                    document.createElement("div");
+
+                card.className =
+                    "feature-card";
+
+
+                const icon =
+                    document.createElement("div");
+
+                icon.className =
+                    "feature-icon";
+
+                icon.textContent = "Dr";
+
+
+                const name =
+                    document.createElement("h4");
+
+                name.textContent =
+                    doctor.fullName;
+
+
+                const specialtyText =
+                    document.createElement("p");
+
+                specialtyText.className = "mb-2";
+
+
+                const specialtyStrong =
+                    document.createElement("strong");
+
+                specialtyStrong.textContent =
+                    doctor.specialty;
+
+                specialtyText.appendChild(
+                    specialtyStrong
+                );
+
+
+                const availability =
+                    document.createElement("p");
+
+
+                if (doctor.nextAvailableSlot) {
+
+                    availability.append(
+                        document.createTextNode(
+                            "Επόμενη διαθέσιμη ώρα:"
+                        )
+                    );
+
+                    availability.appendChild(
+                        document.createElement("br")
+                    );
+
+                    const date =
+                        document.createElement("strong");
+
+                    date.textContent =
+                        doctor.nextAvailableSlot;
+
+                    availability.appendChild(date);
+                }
+                else {
+
+                    availability.textContent =
+                        "Δεν βρέθηκε διαθέσιμη ώρα τις επόμενες 14 ημέρες.";
+                }
+
+
+                const action =
+                    document.createElement("div");
+
+                action.className = "mt-3";
+
+
+                const login =
+                    document.createElement("a");
+
+                login.href =
+                    "/Identity/Account/Login";
+
+                login.className =
+                    "btn btn-primary-custom w-100";
+
+                login.textContent =
+                    "Σύνδεση για Ραντεβού";
+
+
+                action.appendChild(login);
+
+                card.appendChild(icon);
+                card.appendChild(name);
+                card.appendChild(specialtyText);
+                card.appendChild(availability);
+                card.appendChild(action);
+
+                column.appendChild(card);
+
+                return column;
+            }
+
+
+            function updateAddressBar(
+                search,
+                specialty
+            ) {
+
+                const url =
+                    new URL(window.location.href);
+
+                url.searchParams.delete("search");
+                url.searchParams.delete("specialty");
+
+                if (search) {
+                    url.searchParams.set(
+                        "search",
+                        search
+                    );
+                }
+
+                if (specialty) {
+                    url.searchParams.set(
+                        "specialty",
+                        specialty
+                    );
+                }
+
+                url.hash = "doctors";
+
+                history.replaceState(
+                    null,
+                    "",
+                    url.pathname +
+                    url.search +
+                    url.hash
+                );
+            }
+
+
+            function wait(milliseconds) {
+
+                return new Promise(function (resolve) {
+                    setTimeout(resolve, milliseconds);
+                });
+            }
+
+        });
+    </script>
+}

@@ -1,0 +1,234 @@
+﻿@model MyDoc.Models.Settings.DoctorSettingsVM
+
+@{
+    ViewData["Title"] = "Ρυθμίσεις";
+
+    var firstInitial = string.IsNullOrWhiteSpace(Model.FirstName)
+        ? ""
+        : Model.FirstName.Substring(0, 1).ToUpper();
+
+    var lastInitial = string.IsNullOrWhiteSpace(Model.LastName)
+        ? ""
+        : Model.LastName.Substring(0, 1).ToUpper();
+
+    var initials = $"{firstInitial}{lastInitial}";
+}
+
+<section class="dashboard-page doctor-dashboard-page account-settings-page">
+    <div class="container">
+
+        <div class="account-settings-page-header">
+            <a asp-controller="DoctorDashboard"
+               asp-action="Index"
+               class="appointment-back-link">
+                ← Ραντεβού
+            </a>
+
+            <h1>Ρυθμίσεις</h1>
+        </div>
+
+        <div class="account-settings-shell">
+
+            <aside class="account-settings-sidebar">
+
+                <div class="account-settings-user">
+                    <div class="account-settings-avatar">
+                        @initials
+                    </div>
+
+                    <div class="account-settings-user-copy">
+                        <strong>@Model.FirstName @Model.LastName</strong>
+                        <span>@Model.Specialty</span>
+                    </div>
+                </div>
+
+                <nav class="account-settings-nav">
+                    <a asp-controller="Settings"
+                       asp-action="DoctorProfile"
+                       class="account-settings-nav-item active">
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+                            <circle cx="12" cy="8" r="4"></circle>
+                            <path d="M4.5 21c.7-4.2 3.2-6.5 7.5-6.5s6.8 2.3 7.5 6.5"></path>
+                        </svg>
+
+                        <span>Προφίλ</span>
+                    </a>
+
+                    <a asp-area="Identity"
+                       asp-page="/Account/Manage/ChangePassword"
+                       class="account-settings-nav-item">
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+                            <rect x="4" y="10" width="16" height="11" rx="3"></rect>
+                            <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+                            <circle cx="12" cy="15.5" r="1"></circle>
+                        </svg>
+
+                        <span>Κωδικός</span>
+                    </a>
+                </nav>
+
+            </aside>
+
+            <main class="account-settings-content">
+
+                <div class="account-settings-content-header">
+                    <div>
+                        <h2>Προφίλ ιατρού</h2>
+                        <p>Το τηλέφωνο είναι το μόνο στοιχείο που μπορείτε να αλλάξετε.</p>
+                    </div>
+                </div>
+
+                <form asp-action="DoctorProfile" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="All"
+                         class="text-danger account-settings-validation"></div>
+
+                    <div class="account-settings-form-grid">
+
+                        <div class="account-settings-field">
+                            <label asp-for="FirstName">
+                                Όνομα
+                            </label>
+
+                            <div class="account-settings-locked-field">
+                                <span>@Model.FirstName</span>
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     aria-hidden="true">
+                                    <rect x="5" y="10" width="14" height="10" rx="2"></rect>
+                                    <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="account-settings-field">
+                            <label asp-for="LastName">
+                                Επώνυμο
+                            </label>
+
+                            <div class="account-settings-locked-field">
+                                <span>@Model.LastName</span>
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     aria-hidden="true">
+                                    <rect x="5" y="10" width="14" height="10" rx="2"></rect>
+                                    <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="account-settings-field">
+                            <label asp-for="Specialty">
+                                Ειδικότητα
+                            </label>
+
+                            <div class="account-settings-locked-field">
+                                <span>@Model.Specialty</span>
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     aria-hidden="true">
+                                    <rect x="5" y="10" width="14" height="10" rx="2"></rect>
+                                    <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="account-settings-field">
+                            <label asp-for="Email">
+                                Email
+                            </label>
+
+                            <div class="account-settings-locked-field">
+                                <span>@Model.Email</span>
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     aria-hidden="true">
+                                    <rect x="5" y="10" width="14" height="10" rx="2"></rect>
+                                    <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="account-settings-field account-settings-field-full">
+                            <label asp-for="PhoneNumber">
+                                Τηλέφωνο
+                            </label>
+
+                            <input asp-for="PhoneNumber"
+                                   class="form-control account-settings-input"
+                                   autocomplete="tel" />
+
+                            <span asp-validation-for="PhoneNumber"
+                                  class="text-danger"></span>
+                        </div>
+
+                    </div>
+
+                    <div class="account-settings-admin-note">
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <path d="M12 10v6"></path>
+                            <path d="M12 7h.01"></path>
+                        </svg>
+
+                        <span>
+                            Για αλλαγή ονόματος, ειδικότητας ή email επικοινωνήστε με τον διαχειριστή.
+                        </span>
+                    </div>
+
+                    <div class="account-settings-actions">
+                        <button type="submit"
+                                class="btn btn-primary-custom">
+                            Αποθήκευση αλλαγών
+                        </button>
+                    </div>
+                </form>
+
+            </main>
+
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,160 @@
+﻿@page
+@model EmailModel
+
+@{
+    ViewData["Title"] = "Email σύνδεσης";
+    ViewData["ActivePage"] = ManageNavPages.Email;
+
+    var backController =
+    User.IsInRole("Doctor")
+        ? "DoctorDashboard"
+        : User.IsInRole("Admin")
+            ? "Appointments"
+            : "PatientDashboard";
+}
+
+<section class="dashboard-page account-settings-page">
+    <div class="container">
+
+        <div class="account-settings-page-header">
+
+            <a asp-area=""
+               asp-controller="@backController"
+               asp-action="Index"
+               class="appointment-back-link">
+                ← Ραντεβού
+            </a>
+
+            <h1>Ρυθμίσεις</h1>
+        </div>
+
+        <div class="account-settings-shell">
+
+            <aside class="account-settings-sidebar">
+
+                <div class="account-security-sidebar-heading">
+
+                    <div class="account-security-sidebar-icon">
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+                            <rect x="3" y="5" width="18" height="14" rx="3"></rect>
+                            <path d="m4 7 8 6 8-6"></path>
+                        </svg>
+                    </div>
+
+                    <div>
+                        <strong>Λογαριασμός</strong>
+                        <span>@User.Identity?.Name</span>
+                    </div>
+
+                </div>
+
+                <partial name="_ManageNav" />
+
+            </aside>
+
+            <main class="account-settings-content">
+
+                <div class="account-settings-content-header">
+                    <div>
+                        <h2>Email σύνδεσης</h2>
+                        <p>
+                            Η αλλαγή ολοκληρώνεται μόνο
+                            αφού επιβεβαιώσετε το νέο email.
+                        </p>
+                    </div>
+                </div>
+
+                <partial name="_StatusMessage"
+                         for="StatusMessage" />
+
+                <form id="email-form"
+                      method="post">
+
+                    <div asp-validation-summary="ModelOnly"
+                         class="text-danger account-settings-validation"
+                         role="alert">
+                    </div>
+
+                    <div class="account-security-form">
+
+                        <div class="account-settings-field">
+                            <label>Τρέχον email</label>
+
+                            <div class="account-settings-locked-field">
+                                <span>@Model.Email</span>
+
+                                @if (Model.IsEmailConfirmed)
+                                {
+                                    <span class="account-email-confirmed">
+                                        Επιβεβαιωμένο
+                                    </span>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="account-settings-field">
+                            <label asp-for="Input.NewEmail">
+                                Νέο email
+                            </label>
+
+                            <input asp-for="Input.NewEmail"
+                                   class="form-control account-settings-input"
+                                   autocomplete="email"
+                                   placeholder="name@example.com" />
+
+                            <span asp-validation-for="Input.NewEmail"
+                                  class="text-danger"></span>
+                        </div>
+
+                    </div>
+
+                    <div class="account-settings-admin-note">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <path d="M12 10v6"></path>
+                            <path d="M12 7h.01"></path>
+                        </svg>
+
+                        <span>
+                            Μετά την επιβεβαίωση θα χρειαστεί
+                            να συνδεθείτε ξανά με το νέο email.
+                        </span>
+
+                    </div>
+
+                    <div class="account-settings-actions">
+
+                        <button id="change-email-button"
+                                type="submit"
+                                asp-page-handler="ChangeEmail"
+                                class="btn btn-primary-custom">
+                            Αποστολή επιβεβαίωσης
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </main>
+
+        </div>
+
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

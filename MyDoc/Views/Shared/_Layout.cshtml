@@ -1,0 +1,202 @@
+﻿@{
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var isPatient = User.IsInRole("Patient");
+    var isDoctor = User.IsInRole("Doctor");
+    var isAdmin = User.IsInRole("Admin");
+
+    var brandController = "Home";
+
+    if (isPatient)
+    {
+        brandController = "PatientDashboard";
+    }
+    else if (isDoctor)
+    {
+        brandController = "DoctorDashboard";
+    }
+    else if (isAdmin)
+    {
+        brandController = "AdminDashboard";
+    }
+
+    var currentController =
+    ViewContext.RouteData.Values["controller"]?
+        .ToString() ?? string.Empty;
+
+    string GetAdminNavClass(string controller)
+    {
+        return string.Equals(
+            currentController,
+            controller,
+            StringComparison.OrdinalIgnoreCase)
+                ? "nav-link active"
+                : "nav-link";
+    }
+}
+
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MyDoc</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/MyDoc.styles.css" asp-append-version="true" />
+</head>
+<body class="@(isAuthenticated ? "app-shell-body" : "public-shell-body")">
+    <header>
+        @if (!isAuthenticated)
+        {
+            <div class="topbar">
+                <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center">
+                    <div class="topbar-info">
+                        <span>📍 Ακτή Μουτσοπούλου 112, Πειραιάς</span>
+                        <span>📞 210 4567890</span>
+                    </div>
+                    <div class="topbar-info">
+                        <span>Δευτέρα - Παρασκευή</span>
+                        <span>08:00 - 16:00</span>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <nav class="navbar navbar-expand-lg navbar-dark main-navbar">
+            <div class="container">
+                <a class="navbar-brand brand-text" asp-area="" asp-controller="@brandController" asp-action="Index">
+                    <span class="brand-mark" aria-hidden="true"></span>
+                    <span>MyDoc</span>
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                        aria-controls="mainNav" aria-expanded="false" aria-label="Εναλλαγή πλοήγησης">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="mainNav">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 app-primary-nav">
+                        @if (!isAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Home" asp-action="Index">Αρχική</a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Home" asp-action="Index" asp-fragment="doctors">Γιατροί</a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Home" asp-action="Contact">Επικοινωνία</a>
+                            </li>
+                        }
+                        else if (isPatient)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="PatientDashboard" asp-action="Index">Ραντεβού</a>
+                            </li>
+                        }
+                        else if (isDoctor)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="DoctorDashboard" asp-action="Index">Σήμερα</a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="DoctorDashboard" asp-action="Schedule">Πρόγραμμα</a>
+                            </li>
+                        }
+                        else if (isAdmin)
+                        {
+                            <li class="nav-item">
+                                <a class="@GetAdminNavClass("AdminDashboard")"
+                                   asp-controller="AdminDashboard"
+                                   asp-action="Index">
+                                    Επισκόπηση
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="@GetAdminNavClass("Doctors")"
+                                   asp-controller="Doctors"
+                                   asp-action="Index">
+                                    Ιατροί
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="@GetAdminNavClass("Patients")"
+                                   asp-controller="Patients"
+                                   asp-action="Index">
+                                    Ασθενείς
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="@GetAdminNavClass("Appointments")"
+                                   asp-controller="Appointments"
+                                   asp-action="Index">
+                                    Ραντεβού
+                                </a>
+                            </li>
+                        }
+                    </ul>
+
+                    <partial name="_LoginPartial" />
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main role="main" class="@(isAuthenticated ? "app-main" : "public-main")">
+        <partial name="_FlashMessage" />
+
+        @RenderBody()
+    </main>
+
+    @if (!isAuthenticated)
+    {
+        <footer class="site-footer">
+            <div class="container">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h5>MyDoc</h5>
+                        <p class="mb-2">
+                            Πλατφόρμα για τον προγραμματισμό και την οργάνωση ιατρικών ραντεβού.
+                        </p>
+                        <p class="mb-0">&copy; 2025 - MyDoc</p>
+                    </div>
+
+                    <div class="col-md-3">
+                        <h6>Πλοήγηση</h6>
+                        <ul class="footer-links">
+                            <li><a asp-controller="Home" asp-action="Index">Αρχική</a></li>
+                            <li><a asp-controller="Home" asp-action="Index" asp-fragment="doctors">Γιατροί</a></li>
+                            <li><a asp-controller="Home" asp-action="Contact">Επικοινωνία</a></li>
+                            <li><a asp-controller="Home" asp-action="Privacy">Απόρρητο</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="col-md-3">
+                        <h6>Επικοινωνία</h6>
+                        <ul class="footer-links">
+                            <li>
+                                Ιατρείο Πειραιά<br />
+                                Ακτή Μουτσοπούλου 112<br />
+                                185 36, Πειραιάς, Αττική
+                            </li>
+                            <li>210 4567890</li>
+                            <li>support@mydoc.com</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    }
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

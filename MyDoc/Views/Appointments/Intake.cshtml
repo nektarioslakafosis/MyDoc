@@ -1,0 +1,127 @@
+﻿@model MyDoc.Models.AppointmentIntakeVM
+
+@{
+    ViewData["Title"] = "Πληροφορίες πριν το Ραντεβού";
+}
+
+<section class="dashboard-page">
+    <div class="container">
+        <div class="form-page-header">
+            <div>
+                <span class="dashboard-badge">Pre-appointment Intake</span>
+                <h1>Πληροφορίες πριν το Ραντεβού</h1>
+                <p>
+                    Συμπληρώστε βασικές πληροφορίες ώστε ο ιατρός να έχει καλύτερη εικόνα πριν από την επίσκεψη.
+                </p>
+            </div>
+        </div>
+
+        <div class="dashboard-content-card mb-4">
+            <div class="details-grid">
+                <div class="details-item">
+                    <span class="details-label">Ημερομηνία</span>
+                    <strong>@Model.AppointmentDate.ToString("dd/MM/yyyy HH:mm")</strong>
+                </div>
+
+                <div class="details-item">
+                    <span class="details-label">Ιατρός</span>
+                    <strong>@Model.DoctorName</strong>
+                </div>
+
+                <div class="details-item details-item-full">
+                    <span class="details-label">Ειδικότητα</span>
+                    <strong>@Model.Specialty</strong>
+                </div>
+            </div>
+        </div>
+
+        <form asp-action="Intake" method="post">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" asp-for="AppointmentId" />
+
+            <div class="dashboard-content-card">
+                <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="MainConcern" class="form-label form-label-custom"></label>
+                    <textarea asp-for="MainConcern"
+                              class="form-control form-control-custom textarea-custom"
+                              rows="4"
+                              placeholder="Περιγράψτε τον βασικό λόγο της επίσκεψης..."></textarea>
+                    <span asp-validation-for="MainConcern" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Symptoms" class="form-label form-label-custom"></label>
+                    <textarea asp-for="Symptoms"
+                              class="form-control form-control-custom textarea-custom"
+                              rows="4"
+                              placeholder="Ποια συμπτώματα έχετε παρατηρήσει;"></textarea>
+                    <span asp-validation-for="Symptoms" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="StartedWhen" class="form-label form-label-custom"></label>
+                    <input asp-for="StartedWhen"
+                           class="form-control form-control-custom"
+                           placeholder="π.χ. πριν 3 μέρες, εδώ και 2 εβδομάδες..." />
+                    <span asp-validation-for="StartedWhen" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="CurrentMedications" class="form-label form-label-custom"></label>
+                    <textarea asp-for="CurrentMedications"
+                              class="form-control form-control-custom textarea-custom"
+                              rows="3"
+                              placeholder="Αναφέρετε φάρμακα που λαμβάνετε αυτή την περίοδο..."></textarea>
+                    <span asp-validation-for="CurrentMedications" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Allergies" class="form-label form-label-custom"></label>
+                    <textarea asp-for="Allergies"
+                              class="form-control form-control-custom textarea-custom"
+                              rows="3"
+                              placeholder="Αναφέρετε αλλεργίες, αν υπάρχουν..."></textarea>
+                    <span asp-validation-for="Allergies" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="PreviousRelevantExams" class="form-label form-label-custom"></label>
+                    <textarea asp-for="PreviousRelevantExams"
+                              class="form-control form-control-custom textarea-custom"
+                              rows="3"
+                              placeholder="Αναφέρετε προηγούμενες σχετικές εξετάσεις ή αποτελέσματα..."></textarea>
+                    <span asp-validation-for="PreviousRelevantExams" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="ExtraNotes" class="form-label form-label-custom"></label>
+                    <textarea asp-for="ExtraNotes"
+                              class="form-control form-control-custom textarea-custom"
+                              rows="4"
+                              placeholder="Οτιδήποτε άλλο θεωρείτε σημαντικό..."></textarea>
+                    <span asp-validation-for="ExtraNotes" class="text-danger"></span>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary-custom">
+                        Αποθήκευση Πληροφοριών
+                    </button>
+
+                    <a asp-controller="Appointments"
+                       asp-action="Details"
+                       asp-route-id="@Model.AppointmentId"
+                       class="btn btn-outline-dashboard">
+                        Επιστροφή
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

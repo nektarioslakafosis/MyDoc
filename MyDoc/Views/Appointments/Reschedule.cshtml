@@ -1,0 +1,426 @@
+﻿@model MyDoc.Models.AppointmentRescheduleVM
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Αλλαγή Ραντεβού";
+
+    var greekCulture = new CultureInfo("el-GR");
+
+    var monthStart = new DateTime(
+        Model.CalendarMonth.Year,
+        Model.CalendarMonth.Month,
+        1);
+
+    var currentMonth = new DateTime(
+        DateTime.Today.Year,
+        DateTime.Today.Month,
+        1);
+
+    var previousMonth = monthStart.AddMonths(-1);
+    var nextMonth = monthStart.AddMonths(1);
+
+    var canGoPrevious =
+        previousMonth >= currentMonth;
+
+    var startOffset =
+        ((int)monthStart.DayOfWeek + 6) % 7;
+
+    var calendarStart =
+        monthStart.AddDays(-startOffset);
+
+    var calendarDays =
+        Enumerable.Range(0, 42)
+            .Select(i =>
+                calendarStart.AddDays(i))
+            .ToList();
+
+    string[] dayNames =
+    {
+        "ΔΕΥ",
+        "ΤΡΙ",
+        "ΤΕΤ",
+        "ΠΕΜ",
+        "ΠΑΡ",
+        "ΣΑΒ",
+        "ΚΥΡ"
+    };
+
+    var requiresDoctorApproval =
+        Model.CurrentStatus ==
+        MyDoc.Models.AppointmentStatus.Approved;
+}
+
+<section class="dashboard-page appointment-reschedule-page">
+    <div class="container">
+
+        <div class="appointment-action-page-header">
+
+            <a asp-controller="Appointments"
+               asp-action="Details"
+               asp-route-id="@Model.AppointmentId"
+               class="appointment-back-link">
+                ← Ραντεβού
+            </a>
+
+            <div class="appointment-action-simple-heading">
+                <h1>Αλλαγή ραντεβού</h1>
+
+                <p>
+                    Επιλέξτε νέα διαθέσιμη ημερομηνία και ώρα.
+                </p>
+            </div>
+
+        </div>
+
+        <section class="appointment-reschedule-current-card">
+
+            <div>
+                <span class="appointment-reschedule-current-label">
+                    Τρέχον ραντεβού
+                </span>
+
+                <h2>@Model.DoctorName</h2>
+
+                <p>@Model.Specialty</p>
+            </div>
+
+            <div class="appointment-reschedule-current-date">
+
+                <strong>
+                    @Model.CurrentAppointmentDate.ToString(
+                    "dddd, dd MMMM yyyy",
+                                        greekCulture)
+                </strong>
+
+                <span>
+                    @Model.CurrentAppointmentDate.ToString("HH:mm")
+                </span>
+            </div>
+        </section>
+
+        @if (requiresDoctorApproval)
+                {
+        <p class="appointment-reschedule-approval-note">
+            Η νέα ώρα θα σταλεί στον ιατρό για έγκριση.
+            Μέχρι να απαντήσει, ισχύει το τρέχον ραντεβού.
+        </p>
+                }
+
+        <form asp-action="Reschedule"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden"
+                   asp-for="AppointmentId" />
+
+            <input type="hidden"
+                   asp-for="DoctorId" />
+
+            <input type="hidden"
+                   asp-for="CalendarMonth"
+                   value="@monthStart.ToString("yyyy-MM-dd")" />
+
+            <div asp-validation-summary="ModelOnly"
+                 class="text-danger mb-3">
+            </div>
+
+            <section class="appointment-create-card appointment-reschedule-calendar-card">
+
+                <div class="appointment-reschedule-section-header">
+
+                    <h2>Νέα ημερομηνία και ώρα</h2>
+
+                    <div class="appointment-calendar-nav">
+
+                        @if (canGoPrevious)
+                        {
+                            <a asp-action="Reschedule"
+                               asp-route-id="@Model.AppointmentId"
+                               asp-route-month="@previousMonth.ToString("yyyy-MM-dd")"
+                               class="booking-nav-btn"
+                               aria-label="Προηγούμενος μήνας">
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="2"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     aria-hidden="true">
+
+                                    <path d="M15 18l-6-6 6-6"></path>
+                                </svg>
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="booking-nav-btn booking-nav-btn-disabled"
+                                  aria-hidden="true">
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="2"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round">
+
+                                    <path d="M15 18l-6-6 6-6"></path>
+                                </svg>
+                            </span>
+                        }
+
+                        <strong>
+                            @monthStart.ToString(
+                            "MMMM yyyy",
+                                                        greekCulture)
+                        </strong>
+
+                        <a asp-action="Reschedule"
+                           asp-route-id="@Model.AppointmentId"
+                           asp-route-month="@nextMonth.ToString("yyyy-MM-dd")"
+                           class="booking-nav-btn"
+                           aria-label="Επόμενος μήνας">
+
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="2"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 aria-hidden="true">
+
+                                <path d="M9 18l6-6-6-6"></path>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="appointment-calendar-legend">
+
+                    <span>
+                        <i class="legend-dot legend-available"></i>
+                        Διαθέσιμο
+                    </span>
+
+                    <span>
+                        <i class="legend-dot legend-booked"></i>
+                        Κλεισμένο
+                    </span>
+
+                    <span>
+                        <i class="legend-dot legend-unavailable"></i>
+                        Μη διαθέσιμο
+                    </span>
+                </div>
+
+                <div class="booking-calendar-shell appointment-calendar-shell">
+
+                    <div class="booking-calendar-days">
+
+                        @foreach (var dayName in dayNames)
+                                                {
+                        <div>@dayName</div>
+                                                }
+
+                    </div>
+
+                    <div class="booking-calendar-grid">
+
+                        @foreach (var day in calendarDays)
+                        {
+                            var daySlots =
+                            Model.CalendarSlots
+                            .Where(s =>
+                            s.Date.Date ==
+                            day.Date)
+                            .OrderBy(s => s.Time)
+                            .ToList();
+
+                            var isOtherMonth =
+                            day.Month !=
+                            monthStart.Month;
+
+                            var isPastDay =
+                            day.Date <
+                            DateTime.Today;
+
+                            <div class="booking-calendar-cell
+                                            @(isOtherMonth ? "calendar-muted-day" : "")
+                                            @(isPastDay ? "calendar-past-day" : "")">
+
+                                <div class="booking-day-number">
+                                    <strong>@day.Day</strong>
+                                </div>
+
+                                <div class="booking-day-slots">
+
+                                    @foreach (var slot in daySlots)
+                                    {
+                                        var slotValue =
+                                        slot.StartDateTime
+                                        .ToString(
+                                        "yyyy-MM-ddTHH:mm:ss");
+
+                                        var slotId =
+                                        "reschedule_slot_" +
+                                        slot.StartDateTime
+                                        .ToString(
+                                        "yyyyMMddHHmm");
+
+                                        if (slot.IsBooked)
+                                        {
+                                            <span class="booking-slot booking-slot-booked">
+                                                @slot.Time.ToString(@"hh\:mm")
+                                            </span>
+                                        }
+                                        else if (slot.IsUnavailable)
+                                        {
+                                            <span class="booking-slot booking-slot-unavailable">
+                                                @slot.Time.ToString(@"hh\:mm")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <div class="booking-slot-option">
+
+                                                <input asp-for="SelectedSlot"
+                                                       type="radio"
+                                                       value="@slotValue"
+                                                       id="@slotId"
+                                                       class="booking-slot-radio"
+                                                       data-slot-label="@day.ToString("dddd, dd MMMM yyyy", greekCulture) στις @slot.Time.ToString(@"hh\:mm")" />
+
+                                                <label for="@slotId"
+                                                       class="booking-slot booking-slot-available">
+
+                                                    @slot.Time.ToString(@"hh\:mm")
+                                                </label>
+                                            </div>
+                                        }
+                                    }
+
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+                </div>
+
+                <span asp-validation-for="SelectedSlot"
+                      class="text-danger d-block mt-3">
+                </span>
+
+            </section>
+
+            <section class="appointment-create-card appointment-reschedule-reason-card">
+
+                <div class="appointment-reschedule-section-header appointment-reschedule-reason-header">
+                    <h2>Λόγος αλλαγής</h2>
+                </div>
+
+                <div id="rescheduleSelectedSlotSummary"
+                     class="appointment-selected-slot"
+                     hidden>
+
+                    <span>Νέα επιλεγμένη ώρα</span>
+
+                    <strong id="rescheduleSelectedSlotText">
+                        -
+                    </strong>
+                </div>
+
+                <div class="appointment-reschedule-reason-field">
+
+                    <label asp-for="Reason"
+                           class="visually-hidden">
+                        Λόγος αλλαγής
+                    </label>
+
+                    <textarea asp-for="Reason"
+                              class="form-control form-control-custom textarea-custom"
+                              rows="5"
+                              maxlength="600"
+                              placeholder="Πληκτρολογήστε τον λόγο..."></textarea>
+
+                    <span asp-validation-for="Reason"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="appointment-action-buttons">
+
+                    <button type="submit"
+                            class="btn btn-primary-custom">
+
+                        @(requiresDoctorApproval
+                                                ? "Αποστολή αιτήματος"
+                                                : "Επιβεβαίωση αλλαγής")
+                    </button>
+
+                    <a asp-controller="Appointments"
+                       asp-action="Details"
+                       asp-route-id="@Model.AppointmentId"
+                       class="btn btn-outline-dashboard">
+
+                        Πίσω
+                    </a>
+                </div>
+
+            </section>
+
+        </form>
+
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const slotRadios =
+                document.querySelectorAll(".booking-slot-radio");
+
+            const selectedSummary =
+                document.getElementById("rescheduleSelectedSlotSummary");
+
+            const selectedText =
+                document.getElementById("rescheduleSelectedSlotText");
+
+            function updateSelectedSlot() {
+
+                const selected =
+                    document.querySelector(".booking-slot-radio:checked");
+
+                if (!selected) {
+
+                    if (selectedSummary) {
+                        selectedSummary.hidden = true;
+                    }
+
+                    return;
+                }
+
+                if (selectedSummary && selectedText) {
+
+                    selectedText.textContent =
+                        selected.getAttribute("data-slot-label")
+                        || selected.value;
+
+                    selectedSummary.hidden = false;
+                }
+            }
+
+            slotRadios.forEach(function (radio) {
+
+                radio.addEventListener(
+                    "change",
+                    updateSelectedSlot);
+            });
+
+            updateSelectedSlot();
+        });
+    </script>
+}

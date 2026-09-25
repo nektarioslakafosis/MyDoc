@@ -1,0 +1,280 @@
+﻿@page
+@model RegisterModel
+
+@{
+    ViewData["Title"] = "Εγγραφή";
+}
+
+<section class="auth-v3-page">
+    <div class="container">
+
+        <div class="auth-v3-shell auth-v3-register-mode" id="authShell">
+
+            <!-- =====================================================
+                 REGISTER FORM
+            ====================================================== -->
+            <div class="auth-v3-form-container auth-v3-register-container">
+                <div class="auth-v3-form-inner">
+
+                    <div class="auth-v3-form-header">
+                        <h1>Δημιουργία λογαριασμού</h1>
+                        <p>
+                            Δημιουργήστε λογαριασμό ασθενή στο MyDoc.
+                        </p>
+                    </div>
+
+                    <form id="registerForm"
+                          asp-route-returnUrl="@Model.ReturnUrl"
+                          method="post">
+
+                        <div asp-validation-summary="ModelOnly"
+                             class="auth-v3-validation text-danger"
+                             role="alert">
+                        </div>
+
+                        <div class="auth-v3-field">
+                            <label asp-for="Input.Email">
+                                Email
+                            </label>
+
+                            <input asp-for="Input.Email"
+                                   class="auth-v3-input"
+                                   autocomplete="username"
+                                   aria-required="true"
+                                   placeholder="name@example.com" />
+
+                            <span asp-validation-for="Input.Email"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="auth-v3-field">
+                            <label asp-for="Input.Password">
+                                Κωδικός πρόσβασης
+                            </label>
+
+                            <input asp-for="Input.Password"
+                                   class="auth-v3-input"
+                                   autocomplete="new-password"
+                                   aria-required="true"
+                                   placeholder="Κωδικός πρόσβασης" />
+
+                            <span asp-validation-for="Input.Password"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="auth-v3-field">
+                            <label asp-for="Input.ConfirmPassword">
+                                Επιβεβαίωση κωδικού
+                            </label>
+
+                            <input asp-for="Input.ConfirmPassword"
+                                   class="auth-v3-input"
+                                   autocomplete="new-password"
+                                   aria-required="true"
+                                   placeholder="Επαναλάβετε τον κωδικό" />
+
+                            <span asp-validation-for="Input.ConfirmPassword"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <button id="registerSubmit"
+                                type="submit"
+                                class="auth-v3-primary-button">
+                            Δημιουργία λογαριασμού
+                        </button>
+                    </form>
+
+                    <div class="auth-v3-mobile-switch">
+                        <span>Έχετε ήδη λογαριασμό;</span>
+
+                        <button type="button"
+                                class="auth-v3-mobile-switch-button"
+                                data-auth-show-login>
+                            Σύνδεση
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- =====================================================
+                 LOGIN FORM
+            ====================================================== -->
+            <div class="auth-v3-form-container auth-v3-login-container">
+                <div class="auth-v3-form-inner">
+
+                    <div class="auth-v3-form-header">
+                        <h1>Σύνδεση</h1>
+                        <p>
+                            Εισάγετε τα στοιχεία του λογαριασμού σας.
+                        </p>
+                    </div>
+
+                    <form asp-page="./Login"
+                          asp-route-returnUrl="@Model.ReturnUrl"
+                          method="post">
+
+                        <div class="auth-v3-field">
+                            <label for="loginEmail">
+                                Email
+                            </label>
+
+                            <input id="loginEmail"
+                                   name="Input.Email"
+                                   type="email"
+                                   class="auth-v3-input"
+                                   autocomplete="username"
+                                   
+                                   placeholder="name@example.com" />
+                        </div>
+
+                        <div class="auth-v3-field">
+
+                            <div class="auth-v3-field-top">
+                                <label for="loginPassword">
+                                    Κωδικός πρόσβασης
+                                </label>
+
+                                <a asp-page="./ForgotPassword">
+                                    Ξεχάσατε τον κωδικό;
+                                </a>
+                            </div>
+
+                            <input id="loginPassword"
+                                   name="Input.Password"
+                                   type="password"
+                                   class="auth-v3-input"
+                                   autocomplete="current-password"
+                                   
+                                   placeholder="Κωδικός πρόσβασης" />
+                        </div>
+
+                        <label class="auth-v3-remember">
+                            <input type="checkbox"
+                                   name="Input.RememberMe"
+                                   value="true" />
+
+                            <span>
+                                Να παραμείνω συνδεδεμένος
+                            </span>
+                        </label>
+
+                        <button type="submit"
+                                class="auth-v3-primary-button">
+                            Σύνδεση
+                        </button>
+                    </form>
+
+                    <div class="auth-v3-confirmation-link">
+                        <a asp-page="./ResendEmailConfirmation">
+                            Δεν λάβατε email επιβεβαίωσης;
+                        </a>
+                    </div>
+
+                    <div class="auth-v3-mobile-switch">
+                        <span>Δεν έχετε λογαριασμό;</span>
+
+                        <button type="button"
+                                class="auth-v3-mobile-switch-button"
+                                data-auth-show-register>
+                            Εγγραφή
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- =====================================================
+                 MOVING BLUE PANEL
+            ====================================================== -->
+            <div class="auth-v3-overlay-container">
+
+                <div class="auth-v3-overlay">
+
+                    <div class="auth-v3-overlay-panel auth-v3-overlay-left">
+
+                        <div class="auth-v3-brand">
+                            <span class="auth-v3-brand-icon">+</span>
+                            <span>MyDoc</span>
+                        </div>
+
+                        <div class="auth-v3-overlay-main">
+                            <h2>Έχετε ήδη λογαριασμό;</h2>
+
+                            <p>
+                                Συνδεθείτε για να συνεχίσετε στα ραντεβού
+                                και στον λογαριασμό σας.
+                            </p>
+
+                            <button type="button"
+                                    class="auth-v3-overlay-button"
+                                    data-auth-show-login>
+                                Σύνδεση
+                            </button>
+                        </div>
+
+                    </div>
+
+
+                    <div class="auth-v3-overlay-panel auth-v3-overlay-right">
+
+                        <div class="auth-v3-brand">
+                            <span class="auth-v3-brand-icon">+</span>
+                            <span>MyDoc</span>
+                        </div>
+
+                        <div class="auth-v3-overlay-main">
+                            <h2>Δεν έχετε λογαριασμό;</h2>
+
+                            <p>
+                                Δημιουργήστε λογαριασμό ασθενή για να
+                                κλείνετε και να διαχειρίζεστε τα ραντεβού σας.
+                            </p>
+
+                            <button type="button"
+                                    class="auth-v3-overlay-button"
+                                    data-auth-show-register>
+                                Εγγραφή
+                            </button>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const shell = document.getElementById("authShell");
+
+            if (!shell) {
+                return;
+            }
+
+            document
+                .querySelectorAll("[data-auth-show-register]")
+                .forEach(function (button) {
+                    button.addEventListener("click", function () {
+                        shell.classList.add("auth-v3-register-mode");
+                    });
+                });
+
+            document
+                .querySelectorAll("[data-auth-show-login]")
+                .forEach(function (button) {
+                    button.addEventListener("click", function () {
+                        shell.classList.remove("auth-v3-register-mode");
+                    });
+                });
+        });
+    </script>
+}

@@ -1,0 +1,144 @@
+﻿@{
+    var flashMessage = TempData["FlashMessage"]?.ToString();
+    var flashType = TempData["FlashMessageType"]?.ToString()?.ToLowerInvariant();
+
+    var allowedTypes = new[]
+    {
+        "success",
+        "warning",
+        "danger",
+        "info"
+    };
+
+    if (!allowedTypes.Contains(flashType))
+    {
+        flashType = "info";
+    }
+
+    var alertRole =
+        flashType == "danger" || flashType == "warning"
+            ? "alert"
+            : "status";
+}
+
+@if (!string.IsNullOrWhiteSpace(flashMessage))
+{
+    <div class="mydoc-flash-container">
+        <div class="mydoc-flash mydoc-flash-@flashType"
+             data-mydoc-flash
+             data-flash-type="@flashType"
+             role="@alertRole"
+             aria-live="@(alertRole == "alert" ? "assertive" : "polite")">
+
+            <div class="mydoc-flash-icon" aria-hidden="true">
+
+                @if (flashType == "success")
+                {
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <path d="M8 12.5l2.5 2.5L16 9"></path>
+                    </svg>
+                }
+                else if (flashType == "warning")
+                {
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <path d="M12 4L21 20H3L12 4Z"></path>
+                        <path d="M12 9v4"></path>
+                        <path d="M12 16h.01"></path>
+                    </svg>
+                }
+                else if (flashType == "danger")
+                {
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <path d="M9 9l6 6"></path>
+                        <path d="M15 9l-6 6"></path>
+                    </svg>
+                }
+                else
+                {
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <path d="M12 10v6"></path>
+                        <path d="M12 7h.01"></path>
+                    </svg>
+                }
+
+            </div>
+
+            <div class="mydoc-flash-message">
+                @flashMessage
+            </div>
+
+            <button type="button"
+                    class="mydoc-flash-close"
+                    data-flash-dismiss
+                    aria-label="Κλείσιμο">
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round">
+                    <path d="M6 6l12 12"></path>
+                    <path d="M18 6L6 18"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const flash = document.querySelector("[data-mydoc-flash]");
+
+            if (!flash) {
+                return;
+            }
+
+            const closeButton = flash.querySelector("[data-flash-dismiss]");
+            const flashType = flash.dataset.flashType;
+
+            function closeFlash() {
+                if (flash.classList.contains("is-leaving")) {
+                    return;
+                }
+
+                flash.classList.add("is-leaving");
+
+                window.setTimeout(function () {
+                    flash.remove();
+                }, 180);
+            }
+
+            if (closeButton) {
+                closeButton.addEventListener("click", closeFlash);
+            }
+
+            if (flashType === "success") {
+                window.setTimeout(closeFlash, 4500);
+            }
+            else if (flashType === "info") {
+                window.setTimeout(closeFlash, 6000);
+            }
+        })();
+    </script>
+}

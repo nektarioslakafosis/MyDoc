@@ -1,0 +1,97 @@
+﻿@model MyDoc.Models.Patient
+
+@{
+    ViewData["Title"] = "Απενεργοποίηση ασθενή";
+
+    var futureAppointments =
+        ViewBag.FutureActiveAppointmentsCount is int count
+            ? count
+            : 0;
+}
+
+<section class="dashboard-page admin-v4-page">
+    <div class="container">
+
+        <div class="admin-v4-danger-page">
+
+            <a asp-action="Details"
+               asp-route-id="@Model.Id"
+               class="appointment-back-link">
+                ← Ασθενής
+            </a>
+
+            
+
+            <span class="admin-v4-danger-kicker">
+                ΠΡΟΣΟΧΗ
+            </span>
+
+            <h1>Απενεργοποίηση ασθενή</h1>
+
+            <p class="admin-v4-danger-lead">
+                @Model.FirstName @Model.LastName
+            </p>
+
+
+            <div class="admin-v4-impact-card">
+
+                <h2>Τι θα συμβεί</h2>
+
+                <ul>
+                    <li>
+                        Ο λογαριασμός του ασθενή θα κλειδωθεί.
+                    </li>
+
+                    <li>
+                        Δεν θα μπορεί να συνδεθεί στο MyDoc.
+                    </li>
+
+                    @if (futureAppointments > 0)
+                    {
+                        <li class="is-warning">
+                            Θα ακυρωθούν
+                            <strong>@futureAppointments</strong>
+                            μελλοντικά ενεργά ραντεβού.
+                        </li>
+                    }
+                    else
+                    {
+                        <li>
+                            Δεν υπάρχουν μελλοντικά ενεργά
+                            ραντεβού που επηρεάζονται.
+                        </li>
+                    }
+                </ul>
+
+            </div>
+
+
+            <form asp-action="Delete"
+                  method="post"
+                  class="admin-v4-danger-actions">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       asp-for="Id" />
+
+                @if (Model.IsActive)
+                {
+                    <button type="submit"
+                            class="btn admin-v4-danger-button">
+                        Απενεργοποίηση
+                    </button>
+                }
+
+                <a asp-action="Details"
+                   asp-route-id="@Model.Id"
+                   class="btn btn-outline-dashboard">
+                    Άκυρο
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+</section>

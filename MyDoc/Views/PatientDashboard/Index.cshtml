@@ -1,0 +1,386 @@
+﻿@using MyDoc.Models
+@using System.Globalization
+@model MyDoc.Models.PatientDashboardVM
+
+@{
+    ViewData["Title"] = "Ραντεβού";
+
+    var greekCulture = new CultureInfo("el-GR");
+    var nextAppointment = Model.NextAppointment;
+
+    var otherUpcomingAppointments = nextAppointment == null
+        ? Model.UpcomingAppointments
+        : Model.UpcomingAppointments
+            .Where(x => x.Id != nextAppointment.Id)
+            .ToList();
+
+    string GetStatusClass(AppointmentStatus status) => status switch
+    {
+        AppointmentStatus.Pending => "status-badge status-pending",
+        AppointmentStatus.Approved => "status-badge status-approved",
+        AppointmentStatus.Cancelled => "status-badge status-cancelled",
+        AppointmentStatus.Expired => "status-badge status-expired",
+        AppointmentStatus.Completed => "status-badge status-approved",
+        AppointmentStatus.NoShow => "status-badge status-cancelled",
+        _ => "status-badge"
+    };
+
+    string GetStatusText(AppointmentStatus status) => status switch
+    {
+        AppointmentStatus.Pending => "Σε αναμονή",
+        AppointmentStatus.Approved => "Εγκεκριμένο",
+        AppointmentStatus.Cancelled => "Ακυρωμένο",
+        AppointmentStatus.Expired => "Έληξε",
+        AppointmentStatus.Completed => "Ολοκληρωμένο",
+        AppointmentStatus.NoShow => "Μη προσέλευση",
+        _ => status.ToString()
+    };
+
+    string GetDateLabel(DateTime date)
+    {
+        return date.ToString("dd MMM", greekCulture);
+    }
+
+    string GetFullDateLabel(DateTime date)
+    {
+        return date.ToString("dddd, dd MMMM yyyy", greekCulture);
+    }
+}
+
+<section class="dashboard-page patient-v3-page">
+    <div class="container">
+        <div class="patient-v3-header">
+            <div>
+                <h1>Ραντεβού</h1>
+                <p>Τα επερχόμενα ραντεβού και το ιστορικό σας.</p>
+            </div>
+
+            @if (nextAppointment != null)
+            {
+                <a asp-controller="Appointments" asp-action="Create" class="btn btn-primary-custom">
+                    Νέο ραντεβού
+                </a>
+            }
+        </div>
+
+        @if (nextAppointment == null)
+        {
+            <section class="patient-v3-empty">
+                <h2>Δεν έχετε ενεργό ραντεβού</h2>
+                <p>
+                    Όταν κλείσετε νέο ραντεβού, θα εμφανίζεται εδώ μαζί με την κατάσταση
+                    και τις βασικές επιλογές διαχείρισης.
+                </p>
+
+                <a asp-controller="Appointments" asp-action="Create" class="btn btn-primary-custom">
+                    Νέο ραντεβού
+                </a>
+            </section>
+        }
+        else
+        {
+            <section class="patient-v3-current">
+                <div class="patient-v3-current-label">
+                    Επόμενο ραντεβού
+                </div>
+
+                <div class="patient-v3-current-menu">
+                    <div class="dropdown">
+                        <button class="btn patient-v3-more"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                aria-label="Περισσότερες ενέργειες">
+                            <svg class="patient-v3-more-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <circle cx="6" cy="12" r="2" />
+                                <circle cx="12" cy="12" r="2" />
+                                <circle cx="18" cy="12" r="2" />
+                            </svg>
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end patient-v3-menu">
+                            <li>
+                                <a class="dropdown-item"
+                                   asp-controller="Appointments"
+                                   asp-action="Details"
+                                   asp-route-id="@nextAppointment.Id">
+                                    Προβολή ραντεβού
+                                </a>
+                            </li>
+
+                            @if (nextAppointment.CanReschedule)
+                            {
+                                <li>
+                                    <a class="dropdown-item"
+                                       asp-controller="Appointments"
+                                       asp-action="Reschedule"
+                                       asp-route-id="@nextAppointment.Id">
+                                        Αλλαγή ώρας
+                                    </a>
+                                </li>
+                            }
+
+                            @if (nextAppointment.CanCancel)
+                            {
+                                <li>
+                                    <a class="dropdown-item text-danger"
+                                       asp-controller="Appointments"
+                                       asp-action="Cancel"
+                                       asp-route-id="@nextAppointment.Id">
+                                        Ακύρωση
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="patient-v3-current-body">
+                    <div class="patient-v3-date-block">
+                        <span>@nextAppointment.AppointmentDate.ToString("ddd", greekCulture)</span>
+                        <strong>@nextAppointment.AppointmentDate.ToString("dd")</strong>
+                        <span>@nextAppointment.AppointmentDate.ToString("MMM", greekCulture)</span>
+                    </div>
+
+                    <div class="patient-v3-current-main">
+                        <div class="patient-v3-current-top">
+                            <div>
+                                <h2>@nextAppointment.DoctorName</h2>
+                                <p>
+                                    @nextAppointment.Specialty ·
+                                    @GetFullDateLabel(nextAppointment.AppointmentDate) ·
+                                    @nextAppointment.AppointmentDate.ToString("HH:mm")
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="patient-v3-current-statusline">
+                            <span class="@GetStatusClass(nextAppointment.Status)">
+                                @GetStatusText(nextAppointment.Status)
+                            </span>
+                        </div>
+
+                        @if (nextAppointment.HasPendingRescheduleRequest)
+                        {
+                            <p class="patient-v3-note">
+                                Το αίτημα αλλαγής ώρας περιμένει απάντηση από τον ιατρό.
+                            </p>
+                        }
+                        else if (nextAppointment.Status == AppointmentStatus.Pending)
+                        {
+                            <p class="patient-v3-muted">
+                                Το αίτημα έχει σταλεί και περιμένει απάντηση από τον ιατρό.
+                            </p>
+                        }
+                    </div>
+                </div>
+            </section>
+        }
+
+        <section class="patient-v3-list-shell">
+            <ul class="nav patient-v3-tabs" id="patientAppointmentTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active"
+                            id="upcoming-tab"
+                            data-bs-toggle="pill"
+                            data-bs-target="#upcomingAppointments"
+                            type="button"
+                            role="tab"
+                            aria-controls="upcomingAppointments"
+                            aria-selected="true">
+                        Επερχόμενα
+                        <span>@otherUpcomingAppointments.Count</span>
+                    </button>
+                </li>
+
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link"
+                            id="history-tab"
+                            data-bs-toggle="pill"
+                            data-bs-target="#historyAppointments"
+                            type="button"
+                            role="tab"
+                            aria-controls="historyAppointments"
+                            aria-selected="false">
+                        Ιστορικό
+                        <span>@Model.HistoryAppointments.Count</span>
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane fade show active"
+                     id="upcomingAppointments"
+                     role="tabpanel"
+                     aria-labelledby="upcoming-tab">
+
+                    @if (!otherUpcomingAppointments.Any())
+                    {
+                        <div class="patient-v3-list-empty">
+                            Δεν υπάρχουν άλλα επερχόμενα ραντεβού.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="patient-v3-list">
+                            @foreach (var appointment in otherUpcomingAppointments)
+                            {
+                                <article class="patient-v3-row">
+                                    <div class="patient-v3-row-date">
+                                        <strong>@GetDateLabel(appointment.AppointmentDate)</strong>
+                                        <span>@appointment.AppointmentDate.ToString("HH:mm")</span>
+                                    </div>
+
+                                    <div class="patient-v3-row-main">
+                                        <h3>@appointment.DoctorName</h3>
+                                        <p>@appointment.Specialty</p>
+                                    </div>
+
+                                    <div class="patient-v3-row-status">
+                                        <span class="@GetStatusClass(appointment.Status)">
+                                            @GetStatusText(appointment.Status)
+                                        </span>
+                                    </div>
+
+                                    <div class="patient-v3-row-actions">
+                                        <div class="dropdown">
+                                            <button class="btn patient-v3-more"
+                                                    type="button"
+                                                    data-bs-toggle="dropdown"
+                                                    aria-expanded="false"
+                                                    aria-label="Περισσότερες ενέργειες">
+                                                <svg class="patient-v3-more-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                    <circle cx="6" cy="12" r="2" />
+                                                    <circle cx="12" cy="12" r="2" />
+                                                    <circle cx="18" cy="12" r="2" />
+                                                </svg>
+                                            </button>
+
+                                            <ul class="dropdown-menu dropdown-menu-end patient-v3-menu">
+                                                <li>
+                                                    <a class="dropdown-item"
+                                                       asp-controller="Appointments"
+                                                       asp-action="Details"
+                                                       asp-route-id="@appointment.Id">
+                                                        Προβολή ραντεβού
+                                                    </a>
+                                                </li>
+
+                                                @if (appointment.CanReschedule)
+                                                {
+                                                    <li>
+                                                        <a class="dropdown-item"
+                                                           asp-controller="Appointments"
+                                                           asp-action="Reschedule"
+                                                           asp-route-id="@appointment.Id">
+                                                            Αλλαγή ώρας
+                                                        </a>
+                                                    </li>
+                                                }
+
+                                                @if (appointment.CanCancel)
+                                                {
+                                                    <li>
+                                                        <a class="dropdown-item text-danger"
+                                                           asp-controller="Appointments"
+                                                           asp-action="Cancel"
+                                                           asp-route-id="@appointment.Id">
+                                                            Ακύρωση
+                                                        </a>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </article>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="tab-pane fade"
+                     id="historyAppointments"
+                     role="tabpanel"
+                     aria-labelledby="history-tab">
+
+                    @if (!Model.HistoryAppointments.Any())
+                    {
+                        <div class="patient-v3-list-empty">
+                            Δεν υπάρχει ιστορικό ακόμα.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="patient-v3-list">
+                            @foreach (var appointment in Model.HistoryAppointments)
+                            {
+                                <article class="patient-v3-row patient-v3-history-row">
+                                    <div class="patient-v3-row-date">
+                                        <strong>@GetDateLabel(appointment.AppointmentDate)</strong>
+                                        <span>@appointment.AppointmentDate.ToString("HH:mm")</span>
+                                    </div>
+
+                                    <div class="patient-v3-row-main">
+                                        <h3>@appointment.DoctorName</h3>
+                                        <p>@appointment.Specialty</p>
+
+                                        @if (appointment.HasFollowUpPlan)
+                                        {
+                                            <small>Υπάρχουν οδηγίες μετά την επίσκεψη.</small>
+                                        }
+                                    </div>
+
+                                    <div class="patient-v3-row-status">
+                                        <span class="@GetStatusClass(appointment.Status)">
+                                            @GetStatusText(appointment.Status)
+                                        </span>
+                                    </div>
+
+                                    <div class="patient-v3-row-actions">
+                                        <div class="dropdown">
+                                            <button class="btn patient-v3-more"
+                                                    type="button"
+                                                    data-bs-toggle="dropdown"
+                                                    aria-expanded="false"
+                                                    aria-label="Περισσότερες ενέργειες">
+                                                <svg class="patient-v3-more-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                    <circle cx="6" cy="12" r="2" />
+                                                    <circle cx="12" cy="12" r="2" />
+                                                    <circle cx="18" cy="12" r="2" />
+                                                </svg>
+                                            </button>
+
+                                            <ul class="dropdown-menu dropdown-menu-end patient-v3-menu">
+                                                <li>
+                                                    <a class="dropdown-item"
+                                                       asp-controller="Appointments"
+                                                       asp-action="Details"
+                                                       asp-route-id="@appointment.Id">
+                                                        Προβολή ραντεβού
+                                                    </a>
+                                                </li>
+
+                                                @if (appointment.Status == AppointmentStatus.Cancelled ||
+                                                                                        appointment.Status == AppointmentStatus.Expired)
+                                                {
+                                                    <li>
+                                                        <a class="dropdown-item"
+                                                           asp-controller="Appointments"
+                                                           asp-action="Create"
+                                                           asp-route-doctorId="@appointment.DoctorId">
+                                                            Νέο ραντεβού με ίδιο ιατρό
+                                                        </a>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </article>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+    </div>
+</section>

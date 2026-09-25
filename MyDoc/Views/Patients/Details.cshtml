@@ -1,0 +1,182 @@
+﻿@model MyDoc.Models.Patient
+
+@{
+    ViewData["Title"] = "Ασθενής";
+
+    var upcomingCount =
+        ViewBag.UpcomingAppointmentsCount is int upcoming
+            ? upcoming
+            : 0;
+
+    var totalCount =
+        ViewBag.TotalAppointmentsCount is int total
+            ? total
+            : 0;
+
+    var hasProfile =
+        !string.IsNullOrWhiteSpace(Model.FirstName) &&
+        !string.IsNullOrWhiteSpace(Model.LastName);
+
+    var displayName =
+        hasProfile
+            ? $"{Model.FirstName} {Model.LastName}"
+            : "Μη ολοκληρωμένο προφίλ";
+
+    var firstInitial =
+        string.IsNullOrWhiteSpace(Model.FirstName)
+            ? "Α"
+            : Model.FirstName[..1].ToUpperInvariant();
+
+    var lastInitial =
+        string.IsNullOrWhiteSpace(Model.LastName)
+            ? ""
+            : Model.LastName[..1].ToUpperInvariant();
+}
+
+<section class="dashboard-page admin-v4-page">
+    <div class="container">
+
+        <div class="admin-v4-subpage-header">
+
+            <a asp-action="Index"
+               class="appointment-back-link">
+                ← Ασθενείς
+            </a>
+
+        </div>
+
+
+        <section class="admin-v4-profile-card">
+
+            <div class="admin-v4-profile-head">
+
+                <div class="admin-v4-profile-main">
+
+                    <div class="admin-v4-profile-avatar">
+                        @firstInitial@lastInitial
+                    </div>
+
+                    <div>
+                        <span class="admin-v4-eyebrow">
+                            ΑΣΘΕΝΗΣ
+                        </span>
+
+                        <h1>@displayName</h1>
+
+                        <p>@Model.Email</p>
+                    </div>
+
+                </div>
+
+                <div class="admin-v4-profile-actions">
+
+                    <span class="status-badge @(Model.IsActive ? "status-approved" : "status-expired")">
+                        @(Model.IsActive ? "Ενεργός" : "Ανενεργός")
+                    </span>
+
+                    <div class="dropdown admin-v4-profile-options">
+
+                        <button type="button"
+                                class="admin-v4-options-button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                aria-label="Ενέργειες ασθενή">
+
+                            <svg viewBox="0 0 24 24"
+                                 fill="currentColor"
+                                 aria-hidden="true">
+                                <circle cx="5" cy="12" r="1.7"></circle>
+                                <circle cx="12" cy="12" r="1.7"></circle>
+                                <circle cx="19" cy="12" r="1.7"></circle>
+                            </svg>
+
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end admin-v4-options-menu">
+
+                            <li>
+                                <a asp-action="Edit"
+                                   asp-route-id="@Model.Id"
+                                   class="dropdown-item">
+                                    Επεξεργασία
+                                </a>
+                            </li>
+
+                            @if (Model.IsActive)
+                            {
+                                <li>
+                                    <a asp-action="Delete"
+                                       asp-route-id="@Model.Id"
+                                       class="dropdown-item admin-v4-dropdown-danger">
+                                        Απενεργοποίηση
+                                    </a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li>
+                                    <form asp-action="Activate"
+                                          asp-route-id="@Model.Id"
+                                          method="post">
+
+                                        @Html.AntiForgeryToken()
+
+                                        <button type="submit"
+                                                class="dropdown-item admin-v4-dropdown-success">
+                                            Ενεργοποίηση
+                                        </button>
+
+                                    </form>
+                                </li>
+                            }
+
+                        </ul>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="admin-v4-detail-grid">
+
+                <div class="admin-v4-detail-item">
+                    <span>Email</span>
+                    <strong>@Model.Email</strong>
+                </div>
+
+                <div class="admin-v4-detail-item">
+                    <span>Τηλέφωνο</span>
+                    <strong>
+                        @(string.IsNullOrWhiteSpace(Model.PhoneNumber)
+                                                ? "—"
+                                                : Model.PhoneNumber)
+                    </strong>
+                </div>
+
+                <div class="admin-v4-detail-item">
+                    <span>Ημερομηνία γέννησης</span>
+                    <strong>
+                        @(Model.DateOfBirth == default
+                                                ? "—"
+                                                : Model.DateOfBirth.ToString("dd/MM/yyyy"))
+                    </strong>
+                </div>
+
+                <div class="admin-v4-detail-item">
+                    <span>Επερχόμενα ραντεβού</span>
+                    <strong>@upcomingCount</strong>
+                </div>
+
+                <div class="admin-v4-detail-item">
+                    <span>Σύνολο ραντεβού</span>
+                    <strong>@totalCount</strong>
+                </div>
+
+            </div>
+
+        </section>
+
+    </div>
+</section>

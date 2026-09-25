@@ -1,0 +1,103 @@
+﻿@model IEnumerable<MyDoc.Models.Appointment>
+
+@{
+    ViewData["Title"] = "Appointments";
+}
+
+<section class="dashboard-page">
+    <div class="container">
+        <div class="dashboard-header">
+            <div>
+                <span class="dashboard-badge">Appointments</span>
+                <h1>Ραντεβού</h1>
+                <p>
+                    Προβολή των ραντεβού της εφαρμογής. Τα ραντεβού δεν διαγράφονται από εδώ, ώστε να υπάρχει ιστορικό.
+                </p>
+            </div>
+
+            @if (User.IsInRole("Patient"))
+            {
+                <div class="dashboard-header-actions">
+                    <a asp-action="Create" class="btn btn-primary-custom">
+                        Νέο Ραντεβού
+                    </a>
+                </div>
+            }
+        </div>
+
+        <div class="dashboard-content-card">
+            @if (!Model.Any())
+            {
+                <div class="empty-state-box">
+                    <h3>Δεν υπάρχουν ραντεβού</h3>
+                    <p>Όταν δημιουργηθούν ραντεβού, θα εμφανιστούν εδώ.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table dashboard-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Ημερομηνία</th>
+                                <th>Περιγραφή</th>
+                                <th>Status</th>
+                                <th>Ιατρός</th>
+                                <th>Ασθενής</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                var statusClass = item.Status switch
+                                {
+                                    MyDoc.Models.AppointmentStatus.Pending => "status-badge status-pending",
+                                    MyDoc.Models.AppointmentStatus.Approved => "status-badge status-approved",
+                                    MyDoc.Models.AppointmentStatus.Cancelled => "status-badge status-cancelled",
+                                    MyDoc.Models.AppointmentStatus.Expired => "status-badge status-expired",
+                                    _ => "status-badge"
+                                };
+
+                                <tr>
+                                    <td>
+                                        <strong>@item.AppointmentDate.ToString("dd/MM/yyyy")</strong>
+                                        <br />
+                                        <span class="text-muted">@item.AppointmentDate.ToString("HH:mm")</span>
+                                    </td>
+
+                                    <td>@item.Description</td>
+
+                                    <td>
+                                        <span class="@statusClass">@item.Status</span>
+                                    </td>
+
+                                    <td>
+                                        @item.Doctor.FirstName @item.Doctor.LastName
+                                        <br />
+                                        <span class="text-muted">@item.Doctor.Specialty</span>
+                                    </td>
+
+                                    <td>
+                                        @(item.Patient != null
+                                                                        ? item.Patient.FirstName + " " + item.Patient.LastName
+                                                                        : "-")
+                            </td>
+
+                                    <td class="text-end">
+                                        <a asp-action="Details"
+                                           asp-route-id="@item.Id"
+                                           class="table-action-link">
+                                            Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                                }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</section>

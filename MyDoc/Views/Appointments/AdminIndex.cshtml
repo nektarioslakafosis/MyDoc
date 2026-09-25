@@ -1,0 +1,347 @@
+﻿@model IEnumerable<MyDoc.Models.Appointment>
+@using MyDoc.Models
+
+@{
+    ViewData["Title"] = "Ραντεβού";
+
+    var appointments =
+        Model.ToList();
+
+    string GetStatusClass(
+        AppointmentStatus status) =>
+        status switch
+        {
+            AppointmentStatus.Pending =>
+                "status-badge status-pending",
+
+            AppointmentStatus.Approved =>
+                "status-badge status-approved",
+
+            AppointmentStatus.Cancelled =>
+                "status-badge status-cancelled",
+
+            AppointmentStatus.Expired =>
+                "status-badge status-expired",
+
+            AppointmentStatus.Completed =>
+                "status-badge status-completed",
+
+            AppointmentStatus.NoShow =>
+                "status-badge status-noshow",
+
+            _ => "status-badge"
+        };
+
+    string GetStatusText(
+        AppointmentStatus status) =>
+        status switch
+        {
+            AppointmentStatus.Pending =>
+                "Σε αναμονή",
+
+            AppointmentStatus.Approved =>
+                "Εγκεκριμένο",
+
+            AppointmentStatus.Cancelled =>
+                "Ακυρωμένο",
+
+            AppointmentStatus.Expired =>
+                "Έληξε",
+
+            AppointmentStatus.Completed =>
+                "Ολοκληρωμένο",
+
+            AppointmentStatus.NoShow =>
+                "Μη προσέλευση",
+
+            _ => status.ToString()
+        };
+}
+
+<section class="dashboard-page admin-v4-page">
+    <div class="container">
+
+        <header class="admin-v4-header">
+
+            <div class="admin-v4-heading">
+                <span class="admin-v4-eyebrow">
+                    ΙΣΤΟΡΙΚΟ
+                </span>
+
+                <h1>Ραντεβού</h1>
+
+                <p>
+                    Συνολική προβολή των ραντεβού
+                    της εφαρμογής.
+                </p>
+            </div>
+
+        </header>
+
+
+        <section class="admin-v4-panel">
+
+            <div class="admin-v4-toolbar">
+
+                <div class="admin-v4-search">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8">
+                        <circle cx="11" cy="11" r="7"></circle>
+                        <path d="m20 20-4-4"></path>
+                    </svg>
+
+                    <input type="search"
+                           id="appointmentSearch"
+                           placeholder="Αναζήτηση ασθενή, ιατρού ή περιγραφής..."
+                           autocomplete="off" />
+
+                </div>
+
+                <select id="appointmentStatusFilter"
+                        class="admin-v4-select">
+                    <option value="all">
+                        Όλες οι καταστάσεις
+                    </option>
+                    <option value="Pending">
+                        Σε αναμονή
+                    </option>
+                    <option value="Approved">
+                        Εγκεκριμένα
+                    </option>
+                    <option value="Completed">
+                        Ολοκληρωμένα
+                    </option>
+                    <option value="Cancelled">
+                        Ακυρωμένα
+                    </option>
+                    <option value="Expired">
+                        Έληξαν
+                    </option>
+                    <option value="NoShow">
+                        Μη προσέλευση
+                    </option>
+                </select>
+
+                <div class="admin-v4-toolbar-summary">
+                    @appointments.Count ραντεβού
+                </div>
+
+            </div>
+
+
+            @if (!appointments.Any())
+            {
+                <div class="admin-v4-empty">
+                    <strong>
+                        Δεν υπάρχουν ραντεβού
+                    </strong>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+
+                    <table class="table admin-v4-table align-middle">
+
+                        <thead>
+                            <tr>
+                                <th>Ημερομηνία</th>
+                                <th>Ασθενής</th>
+                                <th>Ιατρός</th>
+                                <th>Περιγραφή</th>
+                                <th>Κατάσταση</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var item in appointments)
+                            {
+                                var patientName =
+                                item.Patient == null
+                                ? "—"
+                                : $"{item.Patient.FirstName} {item.Patient.LastName}";
+
+                                var doctorName =
+                                $"{item.Doctor.FirstName} {item.Doctor.LastName}";
+
+                                var searchText =
+                                $"{patientName} {doctorName} {item.Doctor.Specialty} {item.Description}"
+                                .ToLowerInvariant();
+
+                                var description =
+                                item.Description.Length > 65
+                                ? item.Description[..65] + "…"
+                                : item.Description;
+
+                                <tr data-admin-appointment-row
+                                    data-status="@item.Status"
+                                    data-search="@searchText">
+
+                                    <td>
+                                        <div class="admin-v4-date-cell">
+                                            <strong>
+                                                @item.AppointmentDate.ToString("dd/MM/yyyy")
+                                            </strong>
+
+                                            <span>
+                                                @item.AppointmentDate.ToString("HH:mm")
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <strong class="admin-v4-table-primary">
+                                            @patientName
+                                        </strong>
+                                    </td>
+
+                                    <td>
+                                        <strong class="admin-v4-table-primary">
+                                            @doctorName
+                                        </strong>
+
+                                        <small class="admin-v4-table-secondary">
+                                            @item.Doctor.Specialty
+                                        </small>
+                                    </td>
+
+                                    <td>
+                                        <span class="admin-v4-description-cell">
+                                            @description
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <span class="@GetStatusClass(item.Status)">
+                                            @GetStatusText(item.Status)
+                                        </span>
+                                    </td>
+
+                                    <td class="text-end">
+                                        <a asp-action="Details"
+                                           asp-route-id="@item.Id"
+                                           class="admin-v4-icon-action"
+                                           title="Προβολή"
+                                           aria-label="Προβολή ραντεβού">
+
+                                            <svg viewBox="0 0 24 24"
+                                                 fill="none"
+                                                 stroke="currentColor"
+                                                 stroke-width="1.8">
+                                                <path d="M5 12h14"></path>
+                                                <path d="m14 7 5 5-5 5"></path>
+                                            </svg>
+
+                                        </a>
+                                    </td>
+
+                                </tr>
+                            }
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <div id="appointmentFilterEmpty"
+                     class="admin-v4-empty"
+                     hidden>
+                    <strong>
+                        Δεν βρέθηκαν αποτελέσματα
+                    </strong>
+
+                    <span>
+                        Αλλάξτε την αναζήτηση ή την κατάσταση.
+                    </span>
+                </div>
+            }
+
+        </section>
+
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const search =
+                document.getElementById(
+                    "appointmentSearch"
+                );
+
+            const statusFilter =
+                document.getElementById(
+                    "appointmentStatusFilter"
+                );
+
+            const rows =
+                Array.from(
+                    document.querySelectorAll(
+                        "[data-admin-appointment-row]"
+                    )
+                );
+
+            const empty =
+                document.getElementById(
+                    "appointmentFilterEmpty"
+                );
+
+            function applyFilters() {
+
+                const query =
+                    (search?.value || "")
+                        .trim()
+                        .toLocaleLowerCase("el-GR");
+
+                const status =
+                    statusFilter?.value || "all";
+
+                let visible = 0;
+
+                rows.forEach(function (row) {
+
+                    const rowText =
+                        row.dataset.search || "";
+
+                    const rowStatus =
+                        row.dataset.status || "";
+
+                    const show =
+                        (!query ||
+                         rowText.includes(query)) &&
+                        (
+                            status === "all" ||
+                            rowStatus === status
+                        );
+
+                    row.hidden = !show;
+
+                    if (show) {
+                        visible++;
+                    }
+                });
+
+                if (empty) {
+                    empty.hidden =
+                        visible > 0;
+                }
+            }
+
+            search?.addEventListener(
+                "input",
+                applyFilters
+            );
+
+            statusFilter?.addEventListener(
+                "change",
+                applyFilters
+            );
+
+        });
+    </script>
+}

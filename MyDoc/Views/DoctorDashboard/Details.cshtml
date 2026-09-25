@@ -1,0 +1,1299 @@
+﻿@model MyDoc.Models.Appointment
+@using MyDoc.Models
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Λεπτομέρειες ραντεβού";
+
+    var greekCulture = new CultureInfo("el-GR");
+
+    var pendingRescheduleRequest =
+        ViewBag.PendingRescheduleRequest as AppointmentRescheduleRequest;
+
+    var appointmentMessages =
+        ViewBag.AppointmentMessages as List<AppointmentMessage>
+        ?? new List<AppointmentMessage>();
+
+    var canSendAppointmentMessage =
+        ViewBag.CanSendAppointmentMessage is bool canSendMessageValue && canSendMessageValue;
+
+    var appointmentIntake =
+        ViewBag.AppointmentIntake as AppointmentIntake;
+
+    var appointmentFollowUpPlan =
+        ViewBag.AppointmentFollowUpPlan as AppointmentFollowUpPlan;
+
+    var appointmentDocuments =
+        ViewBag.AppointmentDocuments as List<AppointmentDocument>
+        ?? new List<AppointmentDocument>();
+
+    var appointmentPrivateNote =
+        ViewBag.AppointmentPrivateNote as AppointmentPrivateNote;
+
+    var appointmentHasStarted = Model.AppointmentDate <= DateTime.Now;
+    var appointmentHasEnded = Model.AppointmentDate.AddMinutes(30) <= DateTime.Now;
+
+    var canCloseAppointment =
+        Model.Status == AppointmentStatus.Approved &&
+        appointmentHasEnded &&
+        pendingRescheduleRequest == null;
+
+    var canUpdateStatus =
+        !appointmentHasStarted &&
+        (
+            Model.Status == AppointmentStatus.Pending ||
+            Model.Status == AppointmentStatus.Approved
+        );
+
+    var canManageFollowUpPlan =
+        Model.Status == AppointmentStatus.Completed;
+
+    var showFollowUpTab =
+        Model.Status == AppointmentStatus.Completed || appointmentFollowUpPlan != null;
+
+    var requestedActiveTab = Context.Request.Query["activeTab"].ToString();
+
+    var allowedTabs = new List<string>
+    {
+        "overview",
+        "preparation",
+        "documents",
+        "notes",
+        "messages"
+    };
+
+    if (showFollowUpTab)
+        allowedTabs.Add("followup");
+
+    var activeTab = allowedTabs.Contains(requestedActiveTab)
+        ? requestedActiveTab
+        : "overview";
+
+    bool IsActiveTab(string tab)
+    {
+        return activeTab == tab;
+    }
+
+    string GetTabButtonClass(string tab)
+    {
+        return IsActiveTab(tab)
+            ? "nav-link active"
+            : "nav-link";
+    }
+
+    string GetTabPanelClass(string tab)
+    {
+        return IsActiveTab(tab)
+            ? "tab-pane fade show active"
+            : "tab-pane fade";
+    }
+
+    string GetAriaSelected(string tab)
+    {
+        return IsActiveTab(tab)
+            ? "true"
+            : "false";
+    }
+
+    var showAppointmentMenu = canUpdateStatus;
+
+    string GetStatusClass(AppointmentStatus status) => status switch
+    {
+        AppointmentStatus.Pending => "status-badge status-pending",
+        AppointmentStatus.Approved => "status-badge status-approved",
+        AppointmentStatus.Cancelled => "status-badge status-cancelled",
+        AppointmentStatus.Expired => "status-badge status-expired",
+        AppointmentStatus.Completed => "status-badge status-approved",
+        AppointmentStatus.NoShow => "status-badge status-cancelled",
+        _ => "status-badge"
+    };
+
+    string GetStatusText(AppointmentStatus status) => status switch
+    {
+        AppointmentStatus.Pending => "Σε αναμονή",
+        AppointmentStatus.Approved => "Εγκεκριμένο",
+        AppointmentStatus.Cancelled => "Ακυρωμένο",
+        AppointmentStatus.Expired => "Έληξε",
+        AppointmentStatus.Completed => "Ολοκληρωμένο",
+        AppointmentStatus.NoShow => "Μη προσέλευση",
+        _ => status.ToString()
+    };
+
+    string GetRoleText(string? role) => role switch
+    {
+        "Patient" => "Ασθενής",
+        "Doctor" => "Ιατρός",
+        "Admin" => "Διαχειριστής",
+        _ => "-"
+    };
+
+    string GetPatientName()
+    {
+        return Model.Patient == null
+            ? "-"
+            : $"{Model.Patient.FirstName} {Model.Patient.LastName}";
+    }
+
+    string GetPatientPhone()
+    {
+        return Model.Patient == null || string.IsNullOrWhiteSpace(Model.Patient.PhoneNumber)
+            ? "-"
+            : Model.Patient.PhoneNumber;
+    }
+
+    string GetFullDateLabel(DateTime date)
+    {
+        return date.ToString("dddd, dd MMMM yyyy", greekCulture);
+    }
+
+    string GetDateTileWeekday(DateTime date)
+    {
+        return date.ToString("ddd", greekCulture);
+    }
+
+    string GetDateTileDay(DateTime date)
+    {
+        return date.ToString("dd", greekCulture);
+    }
+
+    string GetDateTileMonth(DateTime date)
+    {
+        return date.ToString("MMM", greekCulture);
+    }
+
+    var hasIntake = appointmentIntake != null;
+    var hasDocuments = appointmentDocuments.Any();
+    var hasPrivateNote = appointmentPrivateNote != null;
+
+    var showIntakeWarning =
+        !hasIntake &&
+        Model.Status == AppointmentStatus.Approved &&
+        !appointmentHasStarted;
+
+    var showIntakeWaitingForApproval =
+        !hasIntake &&
+        Model.Status == AppointmentStatus.Pending;
+
+    var showIntakeHistoricalEmptyState =
+        !hasIntake &&
+        !showIntakeWarning &&
+        !showIntakeWaitingForApproval;
+}
+
+<section class="dashboard-page appointment-details-page doctor-details-page">
+    <div class="container">
+        <div class="appointment-detail-header">
+            <div>
+                <a asp-controller="DoctorDashboard" asp-action="Index" class="appointment-back-link">
+                    ← Ραντεβού
+                </a>
+
+                <h1>Λεπτομέρειες ραντεβού</h1>
+                <p>
+                    Δείτε τα στοιχεία του ασθενή, τις πληροφορίες επίσκεψης, τα αρχεία και τις ενέργειες του ραντεβού.
+                </p>
+            </div>
+        </div>
+
+        <section class="appointment-summary-card">
+            @if (showAppointmentMenu)
+            {
+                <div class="appointment-summary-menu">
+                    <div class="dropdown">
+                        <button class="btn appointment-details-more"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                aria-label="Περισσότερες ενέργειες">
+                            <svg class="appointment-details-more-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <circle cx="6" cy="12" r="2" />
+                                <circle cx="12" cy="12" r="2" />
+                                <circle cx="18" cy="12" r="2" />
+                            </svg>
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end appointment-details-menu">
+                            <li>
+                                <a class="dropdown-item"
+                                   asp-action="Edit"
+                                   asp-route-id="@Model.Id">
+                                    Ενημέρωση κατάστασης
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            }
+
+            <div class="appointment-summary-body">
+                <div class="appointment-summary-date">
+                    <span>@GetDateTileWeekday(Model.AppointmentDate)</span>
+                    <strong>@GetDateTileDay(Model.AppointmentDate)</strong>
+                    <span>@GetDateTileMonth(Model.AppointmentDate)</span>
+                </div>
+
+                <div class="appointment-summary-main">
+                    <div class="appointment-summary-top">
+                        <div>
+                            <span class="appointment-summary-label">Ραντεβού ασθενή</span>
+
+                            <h2>@GetPatientName()</h2>
+
+                            <p>
+                                @GetFullDateLabel(Model.AppointmentDate) ·
+                                @Model.AppointmentDate.ToString("HH:mm")
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="appointment-summary-statusline">
+                        <span class="@GetStatusClass(Model.Status)">
+                            @GetStatusText(Model.Status)
+                        </span>
+                    </div>
+
+                    @if (pendingRescheduleRequest != null)
+                    {
+                        <p class="appointment-summary-warning">
+                            Υπάρχει αίτημα αλλαγής ώρας που χρειάζεται απάντηση.
+                        </p>
+                    }
+                    else if (canCloseAppointment)
+                    {
+                        <p class="appointment-summary-warning">
+                            Το ραντεβού έχει ολοκληρώσει την προγραμματισμένη διάρκειά του και χρειάζεται κλείσιμο.
+                        </p>
+                    }
+                    else if (Model.Status == AppointmentStatus.Pending)
+                    {
+                        <p class="appointment-summary-muted">
+                            Το αίτημα περιμένει έγκριση ή ακύρωση από εσάς.
+                        </p>
+                    }
+                    else if (Model.Status == AppointmentStatus.Approved)
+                    {
+                        <p class="appointment-summary-muted">
+                            Το ραντεβού είναι εγκεκριμένο και βρίσκεται στο πρόγραμμά σας.
+                        </p>
+                    }
+                    else if (Model.Status == AppointmentStatus.Cancelled)
+                    {
+                        <p class="appointment-summary-muted">
+                            Το ραντεβού έχει ακυρωθεί.
+                        </p>
+                    }
+                    else if (Model.Status == AppointmentStatus.Completed)
+                    {
+                        <p class="appointment-summary-muted">
+                            Το ραντεβού έχει ολοκληρωθεί.
+                        </p>
+                    }
+                </div>
+            </div>
+        </section>
+
+        <section class="appointment-details-shell">
+            <ul class="nav appointment-details-tabs" id="doctorAppointmentDetailsTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class='@GetTabButtonClass("overview")'
+                            id="overview-tab"
+                            data-bs-toggle="pill"
+                            data-bs-target="#overviewPanel"
+                            type="button"
+                            role="tab"
+                            aria-controls="overviewPanel"
+                            aria-selected='@GetAriaSelected("overview")'>
+                        Σύνοψη
+                    </button>
+                </li>
+
+                <li class="nav-item" role="presentation">
+                    <button class='@GetTabButtonClass("preparation")'
+                            id="preparation-tab"
+                            data-bs-toggle="pill"
+                            data-bs-target="#preparationPanel"
+                            type="button"
+                            role="tab"
+                            aria-controls="preparationPanel"
+                            aria-selected='@GetAriaSelected("preparation")'>
+                        Πληροφορίες επίσκεψης
+
+                        @if (showIntakeWarning)
+                        {
+                            <span class="appointment-tab-warning-badge">!</span>
+                        }
+                    </button>
+                </li>
+
+                <li class="nav-item" role="presentation">
+                    <button class='@GetTabButtonClass("documents")'
+                            id="documents-tab"
+                            data-bs-toggle="pill"
+                            data-bs-target="#documentsPanel"
+                            type="button"
+                            role="tab"
+                            aria-controls="documentsPanel"
+                            aria-selected='@GetAriaSelected("documents")'>
+                        Αρχεία
+                        <span>@appointmentDocuments.Count</span>
+                    </button>
+                </li>
+
+                <li class="nav-item" role="presentation">
+                    <button class='@GetTabButtonClass("notes")'
+                            id="notes-tab"
+                            data-bs-toggle="pill"
+                            data-bs-target="#notesPanel"
+                            type="button"
+                            role="tab"
+                            aria-controls="notesPanel"
+                            aria-selected='@GetAriaSelected("notes")'>
+                        Σημειώσεις
+
+                        @if (hasPrivateNote)
+                        {
+                            <span>1</span>
+                        }
+                    </button>
+                </li>
+
+                <li class="nav-item" role="presentation">
+                    <button class='@GetTabButtonClass("messages")'
+                            id="messages-tab"
+                            data-bs-toggle="pill"
+                            data-bs-target="#messagesPanel"
+                            type="button"
+                            role="tab"
+                            aria-controls="messagesPanel"
+                            aria-selected='@GetAriaSelected("messages")'>
+                        Μηνύματα
+                        <span id="doctorAppointmentMessagesCount">@appointmentMessages.Count</span>
+                    </button>
+                </li>
+
+                @if (showFollowUpTab)
+                {
+                    <li class="nav-item" role="presentation">
+                        <button class='@GetTabButtonClass("followup")'
+                                id="followup-tab"
+                                data-bs-toggle="pill"
+                                data-bs-target="#followupPanel"
+                                type="button"
+                                role="tab"
+                                aria-controls="followupPanel"
+                                aria-selected='@GetAriaSelected("followup")'>
+                            Οδηγίες
+                        </button>
+                    </li>
+                }
+            </ul>
+
+            <div class="tab-content appointment-details-tab-content">
+                <div class="@GetTabPanelClass("overview")"
+                     id="overviewPanel"
+                     role="tabpanel"
+                     aria-labelledby="overview-tab">
+
+                    <div class="appointment-overview-grid">
+                        <div class="appointment-info-block">
+                            <span>Ημερομηνία</span>
+                            <strong>@Model.AppointmentDate.ToString("dd/MM/yyyy HH:mm")</strong>
+                        </div>
+
+                        <div class="appointment-info-block">
+                            <span>Κατάσταση</span>
+                            <strong>@GetStatusText(Model.Status)</strong>
+                        </div>
+
+                        <div class="appointment-info-block">
+                            <span>Ασθενής</span>
+                            <strong>@GetPatientName()</strong>
+                        </div>
+
+                        <div class="appointment-info-block">
+                            <span>Τηλέφωνο ασθενή</span>
+                            <strong>@GetPatientPhone()</strong>
+                        </div>
+
+                        <div class="appointment-info-block appointment-info-block-full">
+                            <span>Περιγραφή</span>
+                            <p>@Model.Description</p>
+                        </div>
+                    </div>
+
+                    @if (pendingRescheduleRequest != null)
+                    {
+                        <section class="doctor-reschedule-request">
+                            <div class="doctor-reschedule-request-header">
+                                <span>Αίτημα αλλαγής ώρας</span>
+
+                                <h3>Ο ασθενής ζήτησε νέα ώρα</h3>
+
+                                <p>Ελέγξτε την αλλαγή πριν απαντήσετε.</p>
+                            </div>
+
+                            <div class="doctor-reschedule-times">
+                                <div class="doctor-reschedule-time-card">
+                                    <span>Τρέχον ραντεβού</span>
+
+                                    <strong>
+                                        @pendingRescheduleRequest.PreviousAppointmentDate.ToString("dd/MM/yyyy")
+                                    </strong>
+
+                                    <small>
+                                        @pendingRescheduleRequest.PreviousAppointmentDate.ToString("HH:mm")
+                                    </small>
+                                </div>
+
+                                <div class="doctor-reschedule-arrow" aria-hidden="true">
+                                    →
+                                </div>
+
+                                <div class="doctor-reschedule-time-card doctor-reschedule-time-card-new">
+                                    <span>Ζητούμενη ώρα</span>
+
+                                    <strong>
+                                        @pendingRescheduleRequest.RequestedAppointmentDate.ToString("dd/MM/yyyy")
+                                    </strong>
+
+                                    <small>
+                                        @pendingRescheduleRequest.RequestedAppointmentDate.ToString("HH:mm")
+                                    </small>
+                                </div>
+                            </div>
+
+                            <div class="doctor-reschedule-reason">
+                                <span>Λόγος αλλαγής</span>
+                                <p>@pendingRescheduleRequest.Reason</p>
+                            </div>
+
+                            <div class="doctor-reschedule-actions">
+                                <form asp-action="ApproveRescheduleRequest"
+                                      asp-route-id="@pendingRescheduleRequest.Id"
+                                      method="post">
+                                    @Html.AntiForgeryToken()
+
+                                    <button type="submit"
+                                            class="btn btn-primary-custom doctor-reschedule-action-btn">
+                                        Έγκριση αλλαγής
+                                    </button>
+                                </form>
+
+                                <button type="button"
+                                        class="btn doctor-reschedule-reject-btn doctor-reschedule-action-btn"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#rejectRescheduleModal">
+                                    Απόρριψη
+                                </button>
+                            </div>
+                        </section>
+
+                        <div class="modal fade"
+                             id="rejectRescheduleModal"
+                             tabindex="-1"
+                             aria-labelledby="rejectRescheduleModalLabel"
+                             aria-hidden="true">
+
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content mydoc-modal">
+
+                                    <div class="modal-header mydoc-modal-header">
+                                        <div>
+                                            <h5 class="modal-title"
+                                                id="rejectRescheduleModalLabel">
+                                                Απόρριψη αιτήματος
+                                            </h5>
+
+                                            <p>
+                                                Επιβεβαιώστε την απόρριψη και συμπληρώστε έναν λόγο.
+                                            </p>
+                                        </div>
+
+                                        <button type="button"
+                                                class="btn-close"
+                                                data-bs-dismiss="modal"
+                                                aria-label="Κλείσιμο">
+                                        </button>
+                                    </div>
+
+                                    <form asp-action="RejectRescheduleRequest"
+                                          method="post">
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden"
+                                               name="RescheduleRequestId"
+                                               value="@pendingRescheduleRequest.Id" />
+
+                                        <div class="modal-body mydoc-modal-body">
+                                            <textarea name="RejectionReason"
+                                                  class="form-control form-control-custom textarea-custom"
+                                                  rows="4"
+                                                  maxlength="600"
+                                                  required
+                                                  placeholder="Πληκτρολογήστε τον λόγο..."></textarea>
+                                        </div>
+
+                                        <div class="modal-footer mydoc-modal-footer">
+                                            <button type="submit"
+                                                    class="btn doctor-reschedule-reject-confirm">
+                                                Απόρριψη αιτήματος
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (canCloseAppointment)
+                    {
+                        <div id="doctorCloseSection" class="doctor-detail-action-card doctor-close-card">
+                            <div class="doctor-close-header">
+                                <span class="doctor-detail-kicker">
+                                    Κλείσιμο ραντεβού
+                                </span>
+
+                                <h3>Ολοκλήρωση ραντεβού</h3>
+
+                                <p>
+                                    Επιλέξτε αν το ραντεβού πραγματοποιήθηκε ή αν ο ασθενής δεν προσήλθε.
+                                </p>
+                            </div>
+
+                            <form id="doctorCloseAppointmentForm"
+                                  method="post"
+                                  class="doctor-close-form">
+
+                                @Html.AntiForgeryToken()
+
+                                <div class="doctor-close-note-field">
+                                    <label for="doctorOutcomeNote"
+                                           class="form-label form-label-custom">
+                                        Σημείωση
+                                        <span class="doctor-field-optional">Προαιρετικό</span>
+                                    </label>
+
+                                    <textarea id="doctorOutcomeNote"
+                                          name="outcomeNote"
+                                          class="form-control form-control-custom textarea-custom"
+                                          rows="3"
+                                          placeholder="Προσθέστε μια σύντομη σημείωση, εφόσον χρειάζεται..."></textarea>
+                                </div>
+
+                                <div class="doctor-close-choice-actions">
+                                    <button type="submit"
+                                            formaction="@Url.Action("CompleteAppointment", "DoctorDashboard", new { id = Model.Id })"
+                                            class="btn btn-primary-custom doctor-close-complete-btn">
+                                        <svg viewBox="0 0 24 24"
+                                             fill="none"
+                                             stroke="currentColor"
+                                             stroke-width="2"
+                                             stroke-linecap="round"
+                                             stroke-linejoin="round"
+                                             aria-hidden="true">
+                                            <path d="M20 6 9 17l-5-5"></path>
+                                        </svg>
+
+                                        Ολοκληρώθηκε
+                                    </button>
+
+                                    <button type="button"
+                                            class="btn doctor-close-noshow-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#noShowConfirmationModal">
+                                        <svg viewBox="0 0 24 24"
+                                             fill="none"
+                                             stroke="currentColor"
+                                             stroke-width="2"
+                                             stroke-linecap="round"
+                                             stroke-linejoin="round"
+                                             aria-hidden="true">
+                                            <circle cx="12" cy="12" r="9"></circle>
+                                            <path d="M9 9l6 6"></path>
+                                            <path d="M15 9l-6 6"></path>
+                                        </svg>
+
+                                        Μη προσέλευση
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="modal fade"
+                             id="noShowConfirmationModal"
+                             tabindex="-1"
+                             aria-labelledby="noShowConfirmationModalLabel"
+                             aria-hidden="true">
+
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content mydoc-modal">
+
+                                    <div class="modal-header mydoc-modal-header">
+                                        <div>
+                                            <h5 class="modal-title"
+                                                id="noShowConfirmationModalLabel">
+                                                Καταχώριση μη προσέλευσης
+                                            </h5>
+
+                                            <p>
+                                                Επιβεβαιώστε ότι ο ασθενής δεν προσήλθε στο ραντεβού.
+                                            </p>
+                                        </div>
+
+                                        <button type="button"
+                                                class="btn-close"
+                                                data-bs-dismiss="modal"
+                                                aria-label="Κλείσιμο">
+                                        </button>
+                                    </div>
+
+                                    <div class="modal-body mydoc-modal-body">
+                                        <p class="mb-0">
+                                            Το ραντεβού θα καταχωρηθεί ως
+                                            <strong>μη προσέλευση</strong>
+                                        </p>
+                                    </div>
+
+                                    <div class="modal-footer mydoc-modal-footer">
+                                       
+
+                                        <button type="submit"
+                                                form="doctorCloseAppointmentForm"
+                                                formaction="@Url.Action("MarkNoShow", "DoctorDashboard", new { id = Model.Id })"
+                                                class="btn doctor-close-noshow-confirm-btn">
+                                            Επιβεβαίωση μη προσέλευσης
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.Status == AppointmentStatus.Cancelled)
+                    {
+                        <div class="appointment-context-note appointment-context-note-danger">
+                            <strong>Πληροφορίες ακύρωσης</strong>
+
+                            <p>
+                                Ακυρώθηκε από: @GetRoleText(Model.CancelledByRole)
+                                <br />
+                                Ημερομηνία ακύρωσης:
+                                @(Model.CancelledAt.HasValue? Model.CancelledAt.Value.ToString("dd/MM/yyyy HH:mm") : "-")
+                                <br />
+                                Λόγος:
+                                @(string.IsNullOrWhiteSpace(Model.CancellationReason) ? "-" : Model.CancellationReason)
+                            </p>
+                        </div>
+                    }
+
+                    @if (Model.Status == AppointmentStatus.Completed || Model.Status == AppointmentStatus.NoShow)
+                    {
+                        <div class="appointment-context-note">
+                            <strong>Πληροφορίες ολοκλήρωσης</strong>
+
+                            <p>
+                                Κατάσταση:
+                                @(Model.Status == AppointmentStatus.Completed ? "Ολοκληρώθηκε" : "Μη προσέλευση")
+                                <br />
+                                Ημερομηνία καταχώρησης:
+                                @(Model.ClosedAt.HasValue? Model.ClosedAt.Value.ToString("dd/MM/yyyy HH:mm") : "-")
+                                <br />
+                                Καταχωρήθηκε από:
+                                @GetRoleText(Model.ClosedByRole)
+                                <br />
+                                Σημείωση ιατρού:
+                                @(string.IsNullOrWhiteSpace(Model.DoctorOutcomeNote) ? "-" : Model.DoctorOutcomeNote)
+                            </p>
+                        </div>
+                    }
+                </div>
+
+                <div class="@GetTabPanelClass("preparation")"
+                     id="preparationPanel"
+                     role="tabpanel"
+                     aria-labelledby="preparation-tab">
+
+                    <div class="appointment-section-heading">
+                        <h2>Πληροφορίες πριν την επίσκεψη</h2>
+                        <p>
+                            Οι πληροφορίες που έχει συμπληρώσει ο ασθενής πριν το ραντεβού.
+                        </p>
+                    </div>
+
+                    @if (hasIntake)
+                    {
+                        <div class="appointment-text-list">
+                            <div>
+                                <span>Βασικός λόγος επίσκεψης</span>
+                                <p>@appointmentIntake!.MainConcern</p>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(appointmentIntake.Symptoms))
+                            {
+                                <div>
+                                    <span>Συμπτώματα</span>
+                                    <p>@appointmentIntake.Symptoms</p>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(appointmentIntake.StartedWhen))
+                            {
+                                <div>
+                                    <span>Πότε ξεκίνησε</span>
+                                    <p>@appointmentIntake.StartedWhen</p>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(appointmentIntake.CurrentMedications))
+                            {
+                                <div>
+                                    <span>Φάρμακα</span>
+                                    <p>@appointmentIntake.CurrentMedications</p>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(appointmentIntake.Allergies))
+                            {
+                                <div>
+                                    <span>Αλλεργίες</span>
+                                    <p>@appointmentIntake.Allergies</p>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(appointmentIntake.PreviousRelevantExams))
+                            {
+                                <div>
+                                    <span>Προηγούμενες σχετικές εξετάσεις</span>
+                                    <p>@appointmentIntake.PreviousRelevantExams</p>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(appointmentIntake.ExtraNotes))
+                            {
+                                <div>
+                                    <span>Επιπλέον σημειώσεις</span>
+                                    <p>@appointmentIntake.ExtraNotes</p>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="appointment-meta-note">
+                            Υποβλήθηκε: @appointmentIntake.SubmittedAt.ToString("dd/MM/yyyy HH:mm")
+
+                            @if (appointmentIntake.UpdatedAt.HasValue)
+                            {
+                                <span>
+                                    · Ενημερώθηκε:
+                                    @appointmentIntake.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")
+                                </span>
+                            }
+                        </div>
+                    }
+                    else if (showIntakeWaitingForApproval)
+                    {
+                        <div class="appointment-preparation-info">
+                            <div class="appointment-preparation-info-icon" aria-hidden="true">
+                                i
+                            </div>
+
+                            <div class="appointment-preparation-copy">
+                                <h3>Οι πληροφορίες επίσκεψης δεν είναι διαθέσιμες ακόμα</h3>
+
+                                <p>
+                                    Ο ασθενής θα μπορεί να τις συμπληρώσει αφού εγκριθεί το ραντεβού.
+                                </p>
+                            </div>
+                        </div>
+                    }
+                    else if (showIntakeWarning)
+                    {
+                        <div class="appointment-preparation-needed">
+                            <div class="appointment-preparation-alert">
+                                <span aria-hidden="true">!</span>
+                            </div>
+
+                            <div class="appointment-preparation-copy">
+                                <h3>Ο ασθενής δεν έχει συμπληρώσει τις πληροφορίες επίσκεψης.</h3>
+
+                                <p>
+                                    Όταν συμπληρωθούν, θα εμφανιστούν εδώ ο λόγος επίσκεψης,
+                                    τα συμπτώματα, τα φάρμακα, οι αλλεργίες και τυχόν προηγούμενες εξετάσεις.
+                                </p>
+                            </div>
+                        </div>
+                    }
+                    else if (showIntakeHistoricalEmptyState)
+                    {
+                        <div class="appointment-preparation-info appointment-preparation-info-muted">
+                            <div class="appointment-preparation-info-icon" aria-hidden="true">
+                                i
+                            </div>
+
+                            <div class="appointment-preparation-copy">
+                                <h3>Δεν καταχωρήθηκαν πληροφορίες πριν την επίσκεψη</h3>
+
+                                <p>
+                                    Ο ασθενής δεν συμπλήρωσε τις πληροφορίες πριν από το ραντεβού
+                                    και η δυνατότητα συμπλήρωσης έχει πλέον κλείσει.
+                                </p>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="@GetTabPanelClass("documents")"
+                     id="documentsPanel"
+                     role="tabpanel"
+                     aria-labelledby="documents-tab">
+
+                    <div class="appointment-section-heading">
+                        <h2>Αρχεία ραντεβού</h2>
+                        <p>
+                            Αρχεία ή εξετάσεις που έχει ανεβάσει ο ασθενής για αυτό το ραντεβού.
+                        </p>
+                    </div>
+
+                    @if (!appointmentDocuments.Any())
+                    {
+                        <div class="appointment-documents-empty">
+                            <h3>Δεν υπάρχουν αρχεία ακόμα</h3>
+                            <p>
+                                Όταν ο ασθενής ανεβάσει αρχεία, θα εμφανιστούν εδώ.
+                            </p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="appointment-documents-list">
+                            @foreach (var document in appointmentDocuments)
+                            {
+                                var fileSizeKb = Math.Ceiling(document.FileSize / 1024.0);
+
+                                var fileKind = document.ContentType.StartsWith("image/")
+                                ? "IMG"
+                                : "PDF";
+
+                                <article class="appointment-document-card">
+                                    <div class="appointment-document-type">
+                                        @fileKind
+                                    </div>
+
+                                    <div class="appointment-document-main">
+                                        <h3>@document.OriginalFileName</h3>
+                                        <p>
+                                            @fileSizeKb.ToString("N0") KB ·
+                                            @document.UploadedAt.ToString("dd/MM/yyyy HH:mm")
+                                        </p>
+                                    </div>
+
+                                    <div class="appointment-document-icon-actions">
+                                        <a asp-action="DownloadDocument"
+                                           asp-route-id="@document.Id"
+                                           class="appointment-document-icon-btn"
+                                           aria-label="Λήψη αρχείου"
+                                           title="Λήψη">
+                                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                <path d="M12 4v10" />
+                                                <path d="M8 10l4 4 4-4" />
+                                                <path d="M5 20h14" />
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </article>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="@GetTabPanelClass("notes")"
+                     id="notesPanel"
+                     role="tabpanel"
+                     aria-labelledby="notes-tab">
+
+                    <div class="appointment-section-heading">
+                        <h2>Προσωπικές σημειώσεις</h2>
+                        <p>
+                            Ιδιωτικές σημειώσεις για δική σας χρήση. Δεν εμφανίζονται στον ασθενή.
+                        </p>
+                    </div>
+
+                    <div class="doctor-notes-area-v2">
+                        @if (appointmentPrivateNote == null)
+                        {
+                            <div class="doctor-note-empty-v2">
+                                <a asp-action="PrivateNote"
+                                   asp-route-id="@Model.Id"
+                                   class="doctor-note-plus-action"
+                                   aria-label="Προσθήκη σημείωσης"
+                                   title="Προσθήκη σημείωσης">
+                                    <span aria-hidden="true"></span>
+                                </a>
+
+                                <div>
+                                    <h3>Δεν υπάρχει προσωπική σημείωση ακόμα</h3>
+                                    <p>
+                                        Κρατήστε μια σύντομη ιδιωτική σημείωση για το ιστορικό,
+                                        την εικόνα του ασθενή ή κάτι που θέλετε να θυμάστε.
+                                    </p>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <article class="doctor-note-card-v2">
+                                <div class="doctor-note-card-header-v2">
+                                    <div>
+                                        <span class="doctor-note-label-v2">
+                                            Ιδιωτική σημείωση
+                                        </span>
+
+                                        <h3>Σημείωση ραντεβού</h3>
+                                    </div>
+
+                                    <a asp-action="PrivateNote"
+                                       asp-route-id="@Model.Id"
+                                       class="doctor-note-edit-action"
+                                       aria-label="Επεξεργασία σημείωσης"
+                                       title="Επεξεργασία σημείωσης">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                            <path d="M4 20h4.5L19 9.5 14.5 5 4 15.5V20z" />
+                                            <path d="M13.5 6L18 10.5" />
+                                        </svg>
+                                    </a>
+                                </div>
+
+                                <div class="doctor-note-card-body-v2">
+                                    <p>@appointmentPrivateNote.Notes</p>
+                                </div>
+
+                                <div class="doctor-note-card-footer-v2">
+                                    <span>
+                                        Δημιουργήθηκε: @appointmentPrivateNote.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                    </span>
+
+                                    @if (appointmentPrivateNote.UpdatedAt.HasValue)
+                                    {
+                                        <span>
+                                            Ενημερώθηκε: @appointmentPrivateNote.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")
+                                        </span>
+                                    }
+                                </div>
+                            </article>
+                        }
+                    </div>
+                </div>
+
+                <div class="@GetTabPanelClass("messages")"
+                     id="messagesPanel"
+                     role="tabpanel"
+                     aria-labelledby="messages-tab">
+
+                    <div class="appointment-section-heading">
+                        <h2>Μηνύματα ραντεβού</h2>
+                        <p>
+                            Επικοινωνία με τον ασθενή για το συγκεκριμένο ραντεβού.
+                        </p>
+                    </div>
+
+                    <div class="appointment-chat-shell">
+                        <div id="doctorAppointmentChatEmpty"
+                             class="appointment-chat-empty @(appointmentMessages.Any() ? "d-none" : "")">
+                            <h3>Δεν υπάρχουν μηνύματα ακόμα</h3>
+                            <p>
+                                Τα μηνύματα που αφορούν αυτό το ραντεβού θα εμφανίζονται εδώ.
+                            </p>
+                        </div>
+
+                        <div id="doctorAppointmentChatThread"
+                             class="appointment-chat-thread @(!appointmentMessages.Any() ? "d-none" : "")">
+                            @foreach (var message in appointmentMessages)
+                            {
+                                var isMine = message.SenderRole == "Doctor";
+
+                                <div class="appointment-chat-message @(isMine ? "appointment-chat-message-mine" : "appointment-chat-message-other")">
+                                    <div class="appointment-chat-author">
+                                        <strong>@(isMine ? "Εσείς" : "Ασθενής")</strong>
+                                        <span>@message.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                                    </div>
+
+                                    <div class="appointment-chat-bubble">
+                                        @message.Message
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        @if (canSendAppointmentMessage)
+                        {
+                            <form id="doctorAppointmentChatForm"
+                                  asp-action="SendMessage"
+                                  asp-route-id="@Model.Id"
+                                  method="post"
+                                  class="appointment-chat-composer">
+                                @Html.AntiForgeryToken()
+
+                                <textarea id="doctorAppointmentChatTextarea"
+                                      name="message"
+                                      maxlength="1000"
+                                      required
+                                      placeholder="Γράψτε μήνυμα προς τον ασθενή..."></textarea>
+
+                                <button id="doctorAppointmentChatSubmit" type="submit" class="btn btn-primary-custom">
+                                    Αποστολή
+                                </button>
+                            </form>
+
+                            <p id="doctorAppointmentChatStatus" class="appointment-chat-status" hidden></p>
+                        }
+                        else
+                        {
+                            <p class="appointment-meta-note">
+                                Τα μηνύματα για αυτό το ραντεβού είναι πλέον μόνο για προβολή.
+                            </p>
+                        }
+                    </div>
+                </div>
+
+                @if (showFollowUpTab)
+                {
+                    <div class="@GetTabPanelClass("followup")"
+                         id="followupPanel"
+                         role="tabpanel"
+                         aria-labelledby="followup-tab">
+
+                        <div class="appointment-section-heading">
+                            <h2>Οδηγίες μετά την επίσκεψη</h2>
+                            <p>
+                                Οδηγίες ή συστάσεις που εμφανίζονται στον ασθενή μετά από ολοκληρωμένο ραντεβού.
+                            </p>
+                        </div>
+
+                        @if (appointmentFollowUpPlan == null)
+                        {
+                            <div class="appointment-empty-panel">
+                                <h3>Δεν υπάρχουν οδηγίες ακόμα</h3>
+                                <p>
+                                    Μπορείτε να προσθέσετε οδηγίες μόνο αφού το ραντεβού σημειωθεί ως ολοκληρωμένο.
+                                </p>
+
+                                @if (canManageFollowUpPlan)
+                                {
+                                    <a asp-action="FollowUpPlan"
+                                       asp-route-id="@Model.Id"
+                                       class="btn btn-primary-custom">
+                                        Προσθήκη οδηγιών
+                                    </a>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="appointment-text-list">
+                                <div>
+                                    <span>Οδηγίες</span>
+                                    <p>@appointmentFollowUpPlan.Instructions</p>
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(appointmentFollowUpPlan.RecommendedTests))
+                                {
+                                    <div>
+                                        <span>Προτεινόμενες εξετάσεις</span>
+                                        <p>@appointmentFollowUpPlan.RecommendedTests</p>
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(appointmentFollowUpPlan.MedicationNotes))
+                                {
+                                    <div>
+                                        <span>Σημειώσεις για φάρμακα / αγωγή</span>
+                                        <p>@appointmentFollowUpPlan.MedicationNotes</p>
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(appointmentFollowUpPlan.WarningSigns))
+                                {
+                                    <div>
+                                        <span>Σημάδια που πρέπει να προσέξει ο ασθενής</span>
+                                        <p>@appointmentFollowUpPlan.WarningSigns</p>
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(appointmentFollowUpPlan.FollowUpRecommendation))
+                                {
+                                    <div>
+                                        <span>Σύσταση επανεξέτασης</span>
+                                        <p>@appointmentFollowUpPlan.FollowUpRecommendation</p>
+                                    </div>
+                                }
+
+                                @if (appointmentFollowUpPlan.SuggestedFollowUpDate.HasValue)
+                                {
+                                    <div>
+                                        <span>Προτεινόμενη ημερομηνία επανεξέτασης</span>
+                                        <p>@appointmentFollowUpPlan.SuggestedFollowUpDate.Value.ToString("dd/MM/yyyy")</p>
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(appointmentFollowUpPlan.ExtraNotes))
+                                {
+                                    <div>
+                                        <span>Επιπλέον σημειώσεις</span>
+                                        <p>@appointmentFollowUpPlan.ExtraNotes</p>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="appointment-meta-note">
+                                Δημιουργήθηκε: @appointmentFollowUpPlan.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+
+                                @if (appointmentFollowUpPlan.UpdatedAt.HasValue)
+                                {
+                                    <span> · Ενημερώθηκε: @appointmentFollowUpPlan.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                                }
+                            </div>
+
+                            @if (canManageFollowUpPlan)
+                            {
+                                <div class="appointment-tab-actions">
+                                    <a asp-action="FollowUpPlan"
+                                       asp-route-id="@Model.Id"
+                                       class="btn btn-outline-dashboard">
+                                        Επεξεργασία οδηγιών
+                                    </a>
+                                </div>
+                            }
+                        }
+                    </div>
+                }
+            </div>
+        </section>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll('[data-bs-toggle="pill"]').forEach(function (tabButton) {
+                tabButton.addEventListener("shown.bs.tab", function (event) {
+                    const target = event.target.getAttribute("data-bs-target");
+
+                    const tabMap = {
+                        "#overviewPanel": "overview",
+                        "#preparationPanel": "preparation",
+                        "#documentsPanel": "documents",
+                        "#notesPanel": "notes",
+                        "#messagesPanel": "messages",
+                        "#followupPanel": "followup"
+                    };
+
+                    const activeTab = tabMap[target];
+
+                    if (activeTab) {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set("activeTab", activeTab);
+                        history.replaceState(null, "", url.pathname + url.search);
+                    }
+                });
+            });
+
+            const chatForm = document.getElementById("doctorAppointmentChatForm");
+            const chatTextarea = document.getElementById("doctorAppointmentChatTextarea");
+            const chatSubmit = document.getElementById("doctorAppointmentChatSubmit");
+            const chatThread = document.getElementById("doctorAppointmentChatThread");
+            const chatEmpty = document.getElementById("doctorAppointmentChatEmpty");
+            const chatStatus = document.getElementById("doctorAppointmentChatStatus");
+            const messagesCount = document.getElementById("doctorAppointmentMessagesCount");
+
+            if (chatForm && chatTextarea && chatSubmit && chatThread) {
+                chatForm.addEventListener("submit", async function (event) {
+                    event.preventDefault();
+
+                    const message = chatTextarea.value.trim();
+
+                    if (!message) {
+                        return;
+                    }
+
+                    chatSubmit.disabled = true;
+
+                    if (chatStatus) {
+                        chatStatus.hidden = true;
+                        chatStatus.textContent = "";
+                        chatStatus.classList.remove("appointment-chat-status-error");
+                    }
+
+                    try {
+                        const response = await fetch(chatForm.action, {
+                            method: "POST",
+                            body: new FormData(chatForm),
+                            headers: {
+                                "X-Requested-With": "XMLHttpRequest"
+                            }
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok || !data.success) {
+                            throw new Error(data.message || "Το μήνυμα δεν στάλθηκε.");
+                        }
+
+                        appendDoctorMessage(data.message, data.createdAt);
+
+                        chatTextarea.value = "";
+
+                        if (messagesCount) {
+                            const currentCount = parseInt(messagesCount.textContent || "0", 10);
+                            messagesCount.textContent = (currentCount + 1).toString();
+                        }
+                    }
+                    catch (error) {
+                        if (chatStatus) {
+                            chatStatus.textContent = error.message || "Το μήνυμα δεν στάλθηκε.";
+                            chatStatus.hidden = false;
+                            chatStatus.classList.add("appointment-chat-status-error");
+                        }
+                    }
+                    finally {
+                        chatSubmit.disabled = false;
+                        chatTextarea.focus();
+                    }
+                });
+            }
+
+            function appendDoctorMessage(message, createdAt) {
+                if (chatEmpty) {
+                    chatEmpty.classList.add("d-none");
+                }
+
+                chatThread.classList.remove("d-none");
+
+                const messageWrapper = document.createElement("div");
+                messageWrapper.className = "appointment-chat-message appointment-chat-message-mine";
+
+                const author = document.createElement("div");
+                author.className = "appointment-chat-author";
+
+                const authorName = document.createElement("strong");
+                authorName.textContent = "Εσείς";
+
+                const time = document.createElement("span");
+                time.textContent = createdAt;
+
+                author.appendChild(authorName);
+                author.appendChild(time);
+
+                const bubble = document.createElement("div");
+                bubble.className = "appointment-chat-bubble";
+                bubble.textContent = message;
+
+                messageWrapper.appendChild(author);
+                messageWrapper.appendChild(bubble);
+
+                chatThread.appendChild(messageWrapper);
+                chatThread.scrollTop = chatThread.scrollHeight;
+            }
+        });
+    </script>
+}

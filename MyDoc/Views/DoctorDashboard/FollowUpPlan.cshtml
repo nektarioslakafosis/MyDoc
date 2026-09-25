@@ -1,0 +1,261 @@
+﻿@model MyDoc.Models.AppointmentFollowUpPlanVM
+
+@{
+    ViewData["Title"] = "Οδηγίες μετά την επίσκεψη";
+}
+
+<section class="dashboard-page doctor-dashboard-page doctor-followup-page">
+    <div class="container">
+
+        <div class="doctor-followup-header">
+            <a asp-controller="DoctorDashboard"
+               asp-action="Details"
+               asp-route-id="@Model.AppointmentId"
+               asp-route-activeTab="followup"
+               class="appointment-back-link">
+                ← Ραντεβού
+            </a>
+
+            <div class="doctor-followup-title-row">
+                <div class="doctor-followup-icon">
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+                        <path d="M8 3h8"></path>
+                        <path d="M9 3v3h6V3"></path>
+                        <rect x="5" y="5" width="14" height="16" rx="3"></rect>
+                        <path d="M9 11h6"></path>
+                        <path d="M9 15h4"></path>
+                    </svg>
+                </div>
+
+                <div>
+                    <span class="doctor-followup-kicker">
+                        Μετά την επίσκεψη
+                    </span>
+
+                    <h1>Οδηγίες για τον ασθενή</h1>
+
+                    <p>
+                        Καταχωρήστε τις οδηγίες, τις συστάσεις και τα επόμενα βήματα
+                        που θα μπορεί να δει ο ασθενής.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="doctor-followup-context">
+            <div>
+                <span>Ασθενής</span>
+                <strong>@Model.PatientName</strong>
+            </div>
+
+            <div>
+                <span>Ραντεβού</span>
+                <strong>@Model.AppointmentDate.ToString("dd/MM/yyyy · HH:mm")</strong>
+            </div>
+        </div>
+
+        <form asp-action="FollowUpPlan"
+              method="post"
+              class="doctor-followup-form">
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" asp-for="AppointmentId" />
+
+            <div asp-validation-summary="All"
+                 class="text-danger doctor-followup-validation"></div>
+
+            <section class="doctor-followup-card">
+                <div class="doctor-followup-section-heading">
+                    <span class="doctor-followup-section-number">01</span>
+
+                    <div>
+                        <h2>Βασικές οδηγίες</h2>
+                        <p>
+                            Οι κύριες οδηγίες που πρέπει να ακολουθήσει ο ασθενής μετά την επίσκεψη.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="doctor-followup-field">
+                    <label asp-for="Instructions"
+                           class="form-label form-label-custom">
+                        Οδηγίες
+                    </label>
+
+                    <textarea asp-for="Instructions"
+                              class="form-control form-control-custom textarea-custom"
+                              rows="5"
+                              placeholder="Γράψτε τις βασικές οδηγίες μετά την επίσκεψη..."></textarea>
+
+                    <span asp-validation-for="Instructions"
+                          class="text-danger"></span>
+                </div>
+            </section>
+
+            <section class="doctor-followup-card">
+                <div class="doctor-followup-section-heading">
+                    <span class="doctor-followup-section-number">02</span>
+
+                    <div>
+                        <h2>Εξετάσεις και αγωγή</h2>
+                        <p>
+                            Προσθέστε μόνο ό,τι χρειάζεται να γνωρίζει ο ασθενής.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="doctor-followup-grid">
+                    <div class="doctor-followup-field">
+                        <label asp-for="RecommendedTests"
+                               class="form-label form-label-custom">
+                            Προτεινόμενες εξετάσεις
+                            <span class="doctor-followup-optional">Προαιρετικό</span>
+                        </label>
+
+                        <textarea asp-for="RecommendedTests"
+                                  class="form-control form-control-custom textarea-custom"
+                                  rows="4"
+                                  placeholder="Π.χ. αιματολογικές εξετάσεις, ακτινογραφία..."></textarea>
+
+                        <span asp-validation-for="RecommendedTests"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="doctor-followup-field">
+                        <label asp-for="MedicationNotes"
+                               class="form-label form-label-custom">
+                            Αγωγή / φάρμακα
+                            <span class="doctor-followup-optional">Προαιρετικό</span>
+                        </label>
+
+                        <textarea asp-for="MedicationNotes"
+                                  class="form-control form-control-custom textarea-custom"
+                                  rows="4"
+                                  placeholder="Σημειώσεις σχετικά με την αγωγή ή τα φάρμακα..."></textarea>
+
+                        <span asp-validation-for="MedicationNotes"
+                              class="text-danger"></span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="doctor-followup-card">
+                <div class="doctor-followup-section-heading">
+                    <span class="doctor-followup-section-number">03</span>
+
+                    <div>
+                        <h2>Παρακολούθηση</h2>
+                        <p>
+                            Τι πρέπει να προσέξει ο ασθενής και αν χρειάζεται νέα εξέταση.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="doctor-followup-field">
+                    <label asp-for="WarningSigns"
+                           class="form-label form-label-custom">
+                        Σημάδια που πρέπει να προσέξει
+                        <span class="doctor-followup-optional">Προαιρετικό</span>
+                    </label>
+
+                    <textarea asp-for="WarningSigns"
+                              class="form-control form-control-custom textarea-custom"
+                              rows="4"
+                              placeholder="Συμπτώματα ή αλλαγές για τις οποίες πρέπει να επικοινωνήσει με ιατρό..."></textarea>
+
+                    <span asp-validation-for="WarningSigns"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="doctor-followup-grid doctor-followup-grid-recheck">
+                    <div class="doctor-followup-field">
+                        <label asp-for="FollowUpRecommendation"
+                               class="form-label form-label-custom">
+                            Σύσταση επανεξέτασης
+                            <span class="doctor-followup-optional">Προαιρετικό</span>
+                        </label>
+
+                        <textarea asp-for="FollowUpRecommendation"
+                                  class="form-control form-control-custom textarea-custom"
+                                  rows="3"
+                                  placeholder="Π.χ. επανεξέταση σε δύο εβδομάδες..."></textarea>
+
+                        <span asp-validation-for="FollowUpRecommendation"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="doctor-followup-field doctor-followup-date-field">
+                        <label asp-for="SuggestedFollowUpDate"
+                               class="form-label form-label-custom">
+                            Προτεινόμενη ημερομηνία
+                            <span class="doctor-followup-optional">Προαιρετικό</span>
+                        </label>
+
+                        <input asp-for="SuggestedFollowUpDate"
+                               type="date"
+                               min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")"
+                               class="form-control form-control-custom" />
+
+                        <span asp-validation-for="SuggestedFollowUpDate"
+                              class="text-danger"></span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="doctor-followup-card">
+                <div class="doctor-followup-section-heading">
+                    <span class="doctor-followup-section-number">04</span>
+
+                    <div>
+                        <h2>Επιπλέον σημειώσεις</h2>
+                        <p>
+                            Οτιδήποτε επιπλέον χρειάζεται να γνωρίζει ο ασθενής.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="doctor-followup-field">
+                    <label asp-for="ExtraNotes"
+                           class="form-label form-label-custom">
+                        Σημειώσεις
+                        <span class="doctor-followup-optional">Προαιρετικό</span>
+                    </label>
+
+                    <textarea asp-for="ExtraNotes"
+                              class="form-control form-control-custom textarea-custom"
+                              rows="4"
+                              placeholder="Προσθέστε οποιαδήποτε επιπλέον πληροφορία..."></textarea>
+
+                    <span asp-validation-for="ExtraNotes"
+                          class="text-danger"></span>
+                </div>
+            </section>
+
+            <div class="doctor-followup-actions">
+                <button type="submit" class="btn btn-primary-custom">
+                    Αποθήκευση οδηγιών
+                </button>
+
+                <a asp-controller="DoctorDashboard"
+                   asp-action="Details"
+                   asp-route-id="@Model.AppointmentId"
+                   asp-route-activeTab="followup"
+                   class="btn btn-outline-dashboard">
+                    Ακύρωση
+                </a>
+            </div>
+        </form>
+
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

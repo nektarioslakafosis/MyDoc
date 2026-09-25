@@ -1,0 +1,187 @@
+﻿@model MyDoc.Models.ContactFormVM
+
+@{
+    ViewData["Title"] = "Επικοινωνία";
+}
+
+<section class="contact-v2-page">
+    <div class="container">
+        <section class="contact-v2-hero">
+            <span class="contact-v2-kicker">Υποστήριξη MyDoc</span>
+
+            <h1>Επικοινωνία</h1>
+
+            <p>
+                Στείλτε μήνυμα για απορίες σχετικά με την πλατφόρμα, τα ραντεβού,
+                τον λογαριασμό σας ή κάποιο τεχνικό ζήτημα.
+            </p>
+        </section>
+
+        <section class="contact-v2-main">
+            <aside class="contact-v2-info-card">
+                <span class="contact-v2-section-label">Πληροφορίες επικοινωνίας</span>
+
+                <h2>Πώς μπορούμε να βοηθήσουμε;</h2>
+
+                <p>
+                    Για θέματα χρήσης της εφαρμογής ή τεχνική υποστήριξη,
+                    συμπληρώστε τη φόρμα και η ομάδα υποστήριξης θα λάβει το μήνυμά σας.
+                </p>
+
+                <div class="contact-v2-info-list">
+                    <div class="contact-v2-info-item">
+                        <span class="contact-v2-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false">
+                                <path d="M4 6.5h16v11H4z" />
+                                <path d="M4 7l8 6 8-6" />
+                            </svg>
+                        </span>
+
+                        <div>
+                            <strong>Email υποστήριξης</strong>
+                            <span>support@mydoc.com</span>
+                        </div>
+                    </div>
+
+                    <div class="contact-v2-info-item">
+                        <span class="contact-v2-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false">
+                                <path d="M6.5 5h3l1.5 4-2 1.2a12 12 0 0 0 4.8 4.8l1.2-2 4 1.5v3a2 2 0 0 1-2.2 2A15.5 15.5 0 0 1 4.5 7.2 2 2 0 0 1 6.5 5z" />
+                            </svg>
+                        </span>
+
+                        <div>
+                            <strong>Τηλέφωνο</strong>
+                            <span>210 4567890</span>
+                        </div>
+                    </div>
+
+                    <div class="contact-v2-info-item">
+                        <span class="contact-v2-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false">
+                                <path d="M12 21s7-5.1 7-11a7 7 0 1 0-14 0c0 5.9 7 11 7 11z" />
+                                <circle cx="12" cy="10" r="2.5" />
+                            </svg>
+                        </span>
+
+                        <div>
+                            <strong>Τοποθεσία</strong>
+                            <span>Ακτή Μουτσοπούλου 112, Πειραιάς</span>
+                        </div>
+                    </div>
+
+                    <div class="contact-v2-info-item">
+                        <span class="contact-v2-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false">
+                                <circle cx="12" cy="12" r="8" />
+                                <path d="M12 7v5l3 2" />
+                            </svg>
+                        </span>
+
+                        <div>
+                            <strong>Ώρες λειτουργίας</strong>
+                            <span>Δευτέρα - Παρασκευή, 08:00 - 16:00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="contact-v2-note">
+                    <strong>Σημείωση</strong>
+                    <p>
+                        Η φόρμα δεν προορίζεται για επείγοντα ιατρικά περιστατικά.
+                        Για επείγουσα ανάγκη, επικοινωνήστε άμεσα με τις αρμόδιες υπηρεσίες.
+                    </p>
+                </div>
+            </aside>
+
+            <div class="contact-v2-form-card">
+                <div class="contact-v2-form-header">
+                    <span class="contact-v2-section-label">Φόρμα επικοινωνίας</span>
+
+                    <h2>Στείλτε μας μήνυμα</h2>
+
+                    <p>
+                        Γράψτε καθαρά το θέμα και λίγες λεπτομέρειες, ώστε να μπορέσουμε
+                        να καταλάβουμε καλύτερα το αίτημά σας.
+                    </p>
+                </div>
+
+                <form asp-action="Contact" method="post" class="contact-v2-form">
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <div class="contact-v2-form-grid">
+                        <div class="contact-v2-field">
+                            <label asp-for="FullName" class="form-label form-label-custom"></label>
+                            <input asp-for="FullName"
+                                   class="form-control form-control-custom"
+                                   placeholder="Ονοματεπώνυμο" />
+                            <span asp-validation-for="FullName" class="text-danger"></span>
+                        </div>
+
+                        <div class="contact-v2-field">
+                            <label asp-for="Email" class="form-label form-label-custom"></label>
+                            <input asp-for="Email"
+                                   class="form-control form-control-custom"
+                                   placeholder="email@example.com" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="contact-v2-field">
+                        <label asp-for="Subject" class="form-label form-label-custom"></label>
+                        <input asp-for="Subject"
+                               class="form-control form-control-custom"
+                               placeholder="Π.χ. Πρόβλημα με ραντεβού" />
+                        <span asp-validation-for="Subject" class="text-danger"></span>
+                    </div>
+
+                    <div class="contact-v2-field">
+                        <label asp-for="Message" class="form-label form-label-custom"></label>
+                        <textarea asp-for="Message"
+                                  class="form-control form-control-custom textarea-custom"
+                                  rows="7"
+                                  placeholder="Περιγράψτε σύντομα τι χρειάζεστε..."></textarea>
+                        <span asp-validation-for="Message" class="text-danger"></span>
+                    </div>
+
+                    <div class="contact-v2-actions">
+                        <button type="submit" class="btn btn-primary-custom">
+                            Αποστολή μηνύματος
+                        </button>
+
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-dashboard">
+                            Επιστροφή στην αρχική
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section class="contact-v2-location-card">
+            <div>
+                <span class="contact-v2-section-label">Ιατρείο</span>
+
+                <h2>MyDoc Πειραιάς</h2>
+
+                <p>
+                    Ακτή Μουτσοπούλου 112, 185 36, Πειραιάς, Αττική
+                </p>
+            </div>
+
+            <div class="contact-v2-map-preview">
+                <iframe title="Χάρτης τοποθεσίας MyDoc Πειραιάς"
+                        src="https://www.google.com/maps?q=%CE%91%CE%BA%CF%84%CE%AE%20%CE%9C%CE%BF%CF%85%CF%84%CF%83%CE%BF%CF%80%CE%BF%CF%8D%CE%BB%CE%BF%CF%85%20112%2C%20185%2036%2C%20%CE%A0%CE%B5%CE%B9%CF%81%CE%B1%CE%B9%CE%AC%CF%82%2C%20%CE%91%CF%84%CF%84%CE%B9%CE%BA%CE%AE&output=embed"
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        allowfullscreen>
+                </iframe>
+            </div>
+        </section>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

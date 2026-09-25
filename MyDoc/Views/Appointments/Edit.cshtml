@@ -1,0 +1,42 @@
+﻿@model MyDoc.Models.Appointment
+
+@{
+    ViewData["Title"] = "Edit Appointment";
+}
+
+<h1>Edit Appointment</h1>
+<hr />
+
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit" method="post">
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="DoctorId" />
+            <input type="hidden" asp-for="PatientId" />
+
+            <div asp-validation-summary="All" class="text-danger"></div>
+
+            <div class="form-group mb-3">
+                <label asp-for="AppointmentDate"></label>
+                <input asp-for="AppointmentDate" class="form-control" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Description"></label>
+                <input asp-for="Description" class="form-control" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label>Status</label>
+                <select asp-for="Status"
+                        class="form-control"
+                        asp-items="Html.GetEnumSelectList<AppointmentStatus>()">
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+

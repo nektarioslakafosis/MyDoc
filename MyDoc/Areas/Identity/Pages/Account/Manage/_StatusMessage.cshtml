@@ -1,0 +1,97 @@
+﻿@model string
+
+@if (!string.IsNullOrWhiteSpace(Model))
+{
+    var statusType = "success";
+    var statusMessage = Model;
+
+    if (Model.StartsWith("Error:", StringComparison.OrdinalIgnoreCase) ||
+        Model.StartsWith("Σφάλμα:", StringComparison.OrdinalIgnoreCase))
+    {
+        statusType = "error";
+        statusMessage = Model[(Model.IndexOf(':') + 1)..].Trim();
+    }
+    else if (Model.StartsWith("Warning:", StringComparison.OrdinalIgnoreCase) ||
+             Model.StartsWith("Προσοχή:", StringComparison.OrdinalIgnoreCase))
+    {
+        statusType = "warning";
+        statusMessage = Model[(Model.IndexOf(':') + 1)..].Trim();
+    }
+    else if (Model.StartsWith("Info:", StringComparison.OrdinalIgnoreCase))
+    {
+        statusType = "info";
+        statusMessage = Model[(Model.IndexOf(':') + 1)..].Trim();
+    }
+    else if (Model.StartsWith("Success:", StringComparison.OrdinalIgnoreCase))
+    {
+        statusType = "success";
+        statusMessage = Model[(Model.IndexOf(':') + 1)..].Trim();
+    }
+
+    var isAlert =
+        statusType == "error" ||
+        statusType == "warning";
+
+    <div class="account-inline-status is-@statusType"
+         role="@(isAlert ? "alert" : "status")">
+
+        <span class="account-inline-status-icon"
+              aria-hidden="true">
+
+            @if (statusType == "error")
+            {
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M9 9l6 6"></path>
+                    <path d="M15 9l-6 6"></path>
+                </svg>
+            }
+            else if (statusType == "warning")
+            {
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+                    <path d="M12 4L21 20H3L12 4Z"></path>
+                    <path d="M12 9v4"></path>
+                    <path d="M12 16h.01"></path>
+                </svg>
+            }
+            else if (statusType == "info")
+            {
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M12 10v6"></path>
+                    <path d="M12 7h.01"></path>
+                </svg>
+            }
+            else
+            {
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M8 12.5l2.5 2.5L16 9"></path>
+                </svg>
+            }
+
+        </span>
+
+        <span>@statusMessage</span>
+    </div>
+}

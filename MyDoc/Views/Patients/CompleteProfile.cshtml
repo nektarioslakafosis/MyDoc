@@ -1,0 +1,173 @@
+﻿@model MyDoc.Models.CompleteProfileVM
+
+@{
+    ViewData["Title"] = "Ολοκλήρωση προφίλ";
+}
+
+<section class="profile-onboarding-page">
+    <div class="container">
+
+        <div class="profile-onboarding-shell">
+
+            <aside class="profile-onboarding-aside">
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="profile-onboarding-brand">
+                    <span class="brand-mark"
+                          aria-hidden="true"></span>
+                    <span>MyDoc</span>
+                </a>
+
+                <h2>Δημιουργία λογαριασμού</h2>
+
+                <div class="profile-onboarding-steps">
+
+                    <div class="profile-onboarding-step is-complete">
+                        <span class="profile-onboarding-step-marker">
+                            ✓
+                        </span>
+
+                        <div>
+                            <strong>Email</strong>
+                            <small>Επιβεβαιώθηκε</small>
+                        </div>
+                    </div>
+
+                    <div class="profile-onboarding-step is-current">
+                        <span class="profile-onboarding-step-marker">
+                            2
+                        </span>
+
+                        <div>
+                            <strong>Στοιχεία προφίλ</strong>
+                            <small>Τρέχον βήμα</small>
+                        </div>
+                    </div>
+
+                    <div class="profile-onboarding-step">
+                        <span class="profile-onboarding-step-marker">
+                            3
+                        </span>
+
+                        <div>
+                            <strong>Ολοκλήρωση</strong>
+                            <small>Είσοδος στο MyDoc</small>
+                        </div>
+                    </div>
+
+                </div>
+
+            </aside>
+
+            <main class="profile-onboarding-form-panel">
+
+                <div class="profile-onboarding-form-header">
+
+                    <span class="profile-onboarding-form-kicker">
+                        ΣΤΟΙΧΕΙΑ ΠΡΟΦΙΛ
+                    </span>
+
+                    <h1>Τα στοιχεία σας</h1>
+
+                    <p>
+                        Συμπληρώστε τα βασικά στοιχεία που
+                        χρησιμοποιούνται στα ραντεβού σας.
+                        Μπορείτε να τα ενημερώσετε αργότερα
+                        από τις ρυθμίσεις.
+                    </p>
+
+                </div>
+
+                <form asp-action="CompleteProfile"
+                      method="post">
+
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="ModelOnly"
+                         class="identity-form-validation text-danger">
+                    </div>
+
+                    <div class="profile-onboarding-grid">
+
+                        <div class="identity-form-field">
+                            <label asp-for="FirstName">
+                                Όνομα
+                            </label>
+
+                            <input asp-for="FirstName"
+                                   class="identity-form-input"
+                                   autocomplete="given-name"
+                                   placeholder="Όνομα" />
+
+                            <span asp-validation-for="FirstName"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="identity-form-field">
+                            <label asp-for="LastName">
+                                Επώνυμο
+                            </label>
+
+                            <input asp-for="LastName"
+                                   class="identity-form-input"
+                                   autocomplete="family-name"
+                                   placeholder="Επώνυμο" />
+
+                            <span asp-validation-for="LastName"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="identity-form-field">
+                            <label asp-for="PhoneNumber">
+                                Τηλέφωνο
+                            </label>
+
+                            <input asp-for="PhoneNumber"
+                                   class="identity-form-input"
+                                   autocomplete="tel"
+                                   placeholder="69XXXXXXXX"
+                                   inputmode="numeric"
+                                   maxlength="10"
+                                   pattern="[0-9]{10}" />
+
+                            <span asp-validation-for="PhoneNumber"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="identity-form-field">
+                            <label asp-for="DateOfBirth">
+                                Ημερομηνία γέννησης
+                            </label>
+
+                            <input asp-for="DateOfBirth"
+                                   type="date"
+                                   min="@DateTime.Today.AddYears(-120).ToString("yyyy-MM-dd")"
+                                   max="@DateTime.Today.ToString("yyyy-MM-dd")"
+                                   class="identity-form-input" />
+
+                            <span asp-validation-for="DateOfBirth"
+                                  class="text-danger"></span>
+                        </div>
+
+                    </div>
+
+                    <div class="profile-onboarding-actions">
+                        <button type="submit"
+                                class="btn btn-primary-custom">
+                            Συνέχεια
+                        </button>
+                    </div>
+
+                </form>
+
+            </main>
+
+        </div>
+
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,57 @@
+﻿@page
+@model MyDoc.Areas.Identity.Pages.Account.RegisterConfirmationModel
+
+@{
+    ViewData["Title"] = "Ελέγξτε το email σας";
+}
+
+<section class="identity-flow-page">
+    <div class="container">
+
+        <div class="identity-flow-card">
+
+            <div class="identity-flow-icon">
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.8"
+                     stroke-linecap="round"
+                     stroke-linejoin="round"
+                     aria-hidden="true">
+                    <rect x="3" y="5" width="18" height="14" rx="3"></rect>
+                    <path d="m4 7 8 6 8-6"></path>
+                </svg>
+            </div>
+
+            <span class="identity-flow-kicker">
+                ΕΠΙΒΕΒΑΙΩΣΗ EMAIL
+            </span>
+
+            <h1>Ελέγξτε το email σας</h1>
+
+            <p class="identity-flow-lead">
+                Στείλαμε σύνδεσμο επιβεβαίωσης στο
+                <strong>@Model.Email</strong>.
+            </p>
+
+            <p class="identity-flow-muted">
+                Ανοίξτε το μήνυμα και πατήστε τον σύνδεσμο
+                για να ενεργοποιήσετε τον λογαριασμό σας.
+            </p>
+
+            <div class="identity-flow-actions">
+                <a asp-page="./Login"
+                   class="btn btn-primary-custom">
+                    Μετάβαση στη σύνδεση
+                </a>
+
+                <a asp-page="./ResendEmailConfirmation"
+                   class="identity-flow-link">
+                    Δεν λάβατε το email;
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+</section>

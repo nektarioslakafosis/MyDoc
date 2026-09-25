@@ -1,0 +1,123 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+@{
+    var roleLabel = "Χρήστης";
+
+    if (User.IsInRole("Patient"))
+    {
+        roleLabel = "Ασθενής";
+    }
+    else if (User.IsInRole("Doctor"))
+    {
+        roleLabel = "Ιατρός";
+    }
+    else if (User.IsInRole("Admin"))
+    {
+        roleLabel = "Διαχειριστής";
+    }
+
+    var avatarLetter = string.IsNullOrWhiteSpace(roleLabel)
+        ? "M"
+        : roleLabel.Substring(0, 1);
+
+    var currentEmail =
+    User.Identity?.Name;
+
+    if (SignInManager.IsSignedIn(User))
+    {
+        var currentUser =
+            await UserManager.GetUserAsync(User);
+
+        if (!string.IsNullOrWhiteSpace(
+                currentUser?.Email))
+        {
+            currentEmail =
+                currentUser.Email;
+        }
+    }
+}
+
+<ul class="navbar-nav align-items-lg-center gap-lg-2">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        @if (User.IsInRole("Patient") || User.IsInRole("Doctor"))
+        {
+            @await Component.InvokeAsync("NotificationBell")
+        }
+
+        <li class="nav-item dropdown">
+            <button class="btn account-menu-toggle dropdown-toggle"
+                    type="button"
+                    id="accountMenuButton"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                <span class="account-avatar" aria-hidden="true">@avatarLetter</span>
+
+                <span class="account-menu-copy">
+                    <span class="account-role">@roleLabel</span>
+                    <span class="account-email">@currentEmail</span>
+                </span>
+            </button>
+
+            <ul class="dropdown-menu dropdown-menu-end account-dropdown-menu" aria-labelledby="accountMenuButton">
+                <li>
+                    <span class="dropdown-header account-dropdown-header">
+                        Συνδεδεμένος ως<br />
+                        <strong>@currentEmail</strong>
+                    </span>
+                </li>
+
+                <li><hr class="dropdown-divider" /></li>
+
+                <li>
+                    <a class="dropdown-item" asp-controller="Settings" asp-action="Index">
+                        Ρυθμίσεις
+                    </a>
+                </li>
+
+                <li>
+                    <a class="dropdown-item" asp-controller="Home" asp-action="Contact">
+                        Επικοινωνία
+                    </a>
+                </li>
+
+                <li>
+                    <a class="dropdown-item" asp-controller="Home" asp-action="Privacy">
+                        Απόρρητο
+                    </a>
+                </li>
+
+                <li><hr class="dropdown-divider" /></li>
+
+                <li>
+                    <form asp-area="Identity"
+                          asp-page="/Account/Logout"
+                          asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })"
+                          method="post">
+                        <button type="submit" class="dropdown-item text-danger">
+                            Αποσύνδεση
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item">
+            <a class="nav-link" asp-area="Identity" asp-page="/Account/Register">
+                Εγγραφή
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="btn btn-login-nav ms-lg-2 mt-2 mt-lg-0"
+               asp-area="Identity"
+               asp-page="/Account/Login">
+                Σύνδεση
+            </a>
+        </li>
+    }
+</ul>

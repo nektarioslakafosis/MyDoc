@@ -1,0 +1,391 @@
+﻿@model IEnumerable<MyDoc.Models.Patient>
+
+@{
+    ViewData["Title"] = "Ασθενείς";
+
+    var patients =
+        Model.ToList();
+
+    var activeCount =
+        patients.Count(p => p.IsActive);
+
+    var inactiveCount =
+        patients.Count - activeCount;
+}
+
+<section class="dashboard-page admin-v4-page">
+    <div class="container">
+
+        <header class="admin-v4-header">
+
+            <div class="admin-v4-heading">
+                <span class="admin-v4-eyebrow">
+                    ΛΟΓΑΡΙΑΣΜΟΙ
+                </span>
+
+                <h1>Ασθενείς</h1>
+
+                <p>
+                    Προβολή και διαχείριση των
+                    λογαριασμών ασθενών.
+                </p>
+            </div>
+
+        </header>
+
+
+        <section class="admin-v4-panel">
+
+            <div class="admin-v4-toolbar">
+
+                <div class="admin-v4-search">
+
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round">
+                        <circle cx="11" cy="11" r="7"></circle>
+                        <path d="m20 20-4-4"></path>
+                    </svg>
+
+                    <input type="search"
+                           id="patientSearch"
+                           placeholder="Αναζήτηση ονόματος, email ή τηλεφώνου..."
+                           autocomplete="off" />
+                </div>
+
+                <div class="admin-v4-filter-group">
+
+                    <button type="button"
+                            class="admin-v4-filter-chip active"
+                            data-patient-filter="all">
+                        Όλοι
+                    </button>
+
+                    <button type="button"
+                            class="admin-v4-filter-chip"
+                            data-patient-filter="active">
+                        Ενεργοί
+                    </button>
+
+                    <button type="button"
+                            class="admin-v4-filter-chip"
+                            data-patient-filter="inactive">
+                        Ανενεργοί
+                    </button>
+
+                </div>
+
+                <div class="admin-v4-toolbar-summary">
+                    @activeCount ενεργοί ·
+                    @inactiveCount ανενεργοί
+                </div>
+
+            </div>
+
+
+            @if (!patients.Any())
+            {
+                <div class="admin-v4-empty">
+                    <strong>
+                        Δεν υπάρχουν ασθενείς
+                    </strong>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+
+                    <table class="table admin-v4-table align-middle">
+
+                        <thead>
+                            <tr>
+                                <th>Ασθενής</th>
+                                <th>Τηλέφωνο</th>
+                                <th>Ημερομηνία γέννησης</th>
+                                <th>Κατάσταση</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var item in patients)
+                            {
+                                var hasProfile =
+                                !string.IsNullOrWhiteSpace(item.FirstName) &&
+                                !string.IsNullOrWhiteSpace(item.LastName) &&
+                                item.DateOfBirth != default;
+
+                                var displayName =
+                                hasProfile
+                                ? $"{item.FirstName} {item.LastName}"
+                                : "Μη ολοκληρωμένο προφίλ";
+
+                                var statusValue =
+                                item.IsActive
+                                ? "active"
+                                : "inactive";
+
+                                var searchableText =
+                                $"{item.FirstName} {item.LastName} {item.Email} {item.PhoneNumber}"
+                                .ToLowerInvariant();
+
+                                var firstInitial =
+                                string.IsNullOrWhiteSpace(item.FirstName)
+                                ? "Α"
+                                : item.FirstName[..1]
+                                .ToUpperInvariant();
+
+                                var lastInitial =
+                                string.IsNullOrWhiteSpace(item.LastName)
+                                ? ""
+                                : item.LastName[..1]
+                                .ToUpperInvariant();
+
+                                <tr data-admin-patient-row
+                                    data-status="@statusValue"
+                                    data-search="@searchableText"
+                                    class="@(!item.IsActive ? "is-inactive" : "")">
+
+                                    <td>
+                                        <div class="admin-v4-person-cell">
+
+                                            <div class="admin-v4-person-avatar">
+                                                @firstInitial@lastInitial
+                                            </div>
+
+                                            <div>
+                                                <strong>
+                                                    @displayName
+                                                </strong>
+
+                                                <small>
+                                                    @item.Email
+                                                </small>
+                                            </div>
+
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        @(string.IsNullOrWhiteSpace(item.PhoneNumber)
+                                                                        ? "—"
+                                                                        : item.PhoneNumber)
+                                                                                       </td>
+
+                                    <td>
+                                        @(item.DateOfBirth == default
+                                                                        ? "—"
+                                                                        : item.DateOfBirth.ToString("dd/MM/yyyy"))
+                            </td>
+
+                                    <td>
+                                @if (item.IsActive)
+                                        {
+                                            <span class="status-badge status-approved">
+                                                Ενεργός
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-badge status-expired">
+                                                Ανενεργός
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        <div class="admin-v4-row-actions">
+
+                                            <a asp-action="Details"
+                                               asp-route-id="@item.Id"
+                                               class="admin-v4-icon-action"
+                                               title="Προβολή"
+                                               aria-label="Προβολή ασθενή">
+                                                <svg viewBox="0 0 24 24"
+                                                     fill="none"
+                                                     stroke="currentColor"
+                                                     stroke-width="1.8"
+                                                     stroke-linecap="round"
+                                                     stroke-linejoin="round"
+                                                     aria-hidden="true">
+                                                    <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6S2.5 12 2.5 12Z"></path>
+                                                    <circle cx="12" cy="12" r="2.5"></circle>
+                                                </svg>
+                                            </a>
+
+                                            <a asp-action="Edit"
+                                               asp-route-id="@item.Id"
+                                               class="admin-v4-icon-action"
+                                               title="Επεξεργασία"
+                                               aria-label="Επεξεργασία ασθενή">
+                                                <svg viewBox="0 0 24 24"
+                                                     fill="none"
+                                                     stroke="currentColor"
+                                                     stroke-width="1.8"
+                                                     stroke-linecap="round"
+                                                     stroke-linejoin="round">
+                                                    <path d="M4 20h4l11-11-4-4L4 16v4Z"></path>
+                                                    <path d="m13.5 6.5 4 4"></path>
+                                                </svg>
+                                            </a>
+
+                                            @if (item.IsActive)
+                                            {
+                                                <a asp-action="Delete"
+                                                   asp-route-id="@item.Id"
+                                                   class="admin-v4-icon-action is-danger"
+                                                   title="Απενεργοποίηση"
+                                                   aria-label="Απενεργοποίηση ασθενή">
+                                                    <svg viewBox="0 0 24 24"
+                                                         fill="none"
+                                                         stroke="currentColor"
+                                                         stroke-width="1.8">
+                                                        <circle cx="12" cy="12" r="9"></circle>
+                                                        <path d="M8 12h8"></path>
+                                                    </svg>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <form asp-action="Activate"
+                                                      asp-route-id="@item.Id"
+                                                      method="post">
+                                                    @Html.AntiForgeryToken()
+
+                                                    <button type="submit"
+                                                            class="admin-v4-icon-action is-success"
+                                                            title="Ενεργοποίηση"
+                                                            aria-label="Ενεργοποίηση ασθενή">
+                                                        <svg viewBox="0 0 24 24"
+                                                             fill="none"
+                                                             stroke="currentColor"
+                                                             stroke-width="1.8">
+                                                            <path d="M5 12.5l4 4L19 7"></path>
+                                                        </svg>
+                                                    </button>
+                                                </form>
+                                            }
+
+                                        </div>
+                                    </td>
+
+                                </tr>
+                            }
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <div id="patientFilterEmpty"
+                     class="admin-v4-empty"
+                     hidden>
+                    <strong>
+                        Δεν βρέθηκαν αποτελέσματα
+                    </strong>
+
+                    <span>
+                        Δοκιμάστε διαφορετική αναζήτηση ή φίλτρο.
+                    </span>
+                </div>
+            }
+
+        </section>
+
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const search =
+                document.getElementById("patientSearch");
+
+            const rows =
+                Array.from(
+                    document.querySelectorAll(
+                        "[data-admin-patient-row]"
+                    )
+                );
+
+            const filters =
+                document.querySelectorAll(
+                    "[data-patient-filter]"
+                );
+
+            const empty =
+                document.getElementById(
+                    "patientFilterEmpty"
+                );
+
+            let activeFilter = "all";
+
+            function applyFilters() {
+
+                const query =
+                    (search?.value || "")
+                        .trim()
+                        .toLocaleLowerCase("el-GR");
+
+                let visible = 0;
+
+                rows.forEach(function (row) {
+
+                    const text =
+                        row.dataset.search || "";
+
+                    const status =
+                        row.dataset.status || "";
+
+                    const show =
+                        (!query ||
+                         text.includes(query)) &&
+                        (
+                            activeFilter === "all" ||
+                            status === activeFilter
+                        );
+
+                    row.hidden = !show;
+
+                    if (show) {
+                        visible++;
+                    }
+                });
+
+                if (empty) {
+                    empty.hidden =
+                        visible > 0;
+                }
+            }
+
+            search?.addEventListener(
+                "input",
+                applyFilters
+            );
+
+            filters.forEach(function (button) {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        activeFilter =
+                            button.dataset.patientFilter;
+
+                        filters.forEach(function (item) {
+                            item.classList.remove("active");
+                        });
+
+                        button.classList.add("active");
+
+                        applyFilters();
+                    }
+                );
+            });
+
+        });
+    </script>
+}

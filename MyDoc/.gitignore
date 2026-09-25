@@ -1,0 +1,29 @@
+﻿# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Build output
+bin/
+obj/
+**/bin/
+**/obj/
+
+# Uploaded/private appointment files
+App_Data/AppointmentDocuments/
+**/App_Data/AppointmentDocuments/
+
+# Local database files, if any
+*.mdf
+*.ldf
+*.db
+*.db-shm
+*.db-wal
+
+# Environment / secret files
+.env
+.env.*
+
+# Misc
+.DS_Store
+Thumbs.db

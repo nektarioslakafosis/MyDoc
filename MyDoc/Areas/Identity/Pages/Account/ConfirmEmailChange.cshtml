@@ -1,0 +1,70 @@
+﻿@page
+@model MyDoc.Areas.Identity.Pages.Account.ConfirmEmailChangeModel
+
+@{
+    ViewData["Title"] =
+        Model.IsSuccess
+            ? "Το email άλλαξε"
+            : "Η αλλαγή δεν ολοκληρώθηκε";
+}
+
+<section class="identity-flow-page">
+    <div class="container">
+
+        <div class="identity-flow-card">
+
+            <div class="identity-flow-icon @(Model.IsSuccess ? "is-success" : "is-danger")">
+
+                @if (Model.IsSuccess)
+                {
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <path d="M8 12.5l2.5 2.5L16 9"></path>
+                    </svg>
+                }
+                else
+                {
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <path d="M9 9l6 6"></path>
+                        <path d="M15 9l-6 6"></path>
+                    </svg>
+                }
+
+            </div>
+
+            <span class="identity-flow-kicker">
+                EMAIL ΣΥΝΔΕΣΗΣ
+            </span>
+
+            <h1>
+                @(Model.IsSuccess
+                                ? "Το νέο email επιβεβαιώθηκε"
+                                : "Η αλλαγή δεν ολοκληρώθηκε")
+            </h1>
+
+            <p class="identity-flow-lead">
+                @Model.StatusMessage
+            </p>
+
+            <div class="identity-flow-actions">
+                <a asp-area="Identity"
+                   asp-page="/Account/Login"
+                   class="btn btn-primary-custom">
+                    Σύνδεση
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+</section>

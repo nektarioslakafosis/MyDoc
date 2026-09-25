@@ -1,0 +1,56 @@
+﻿@page
+@model LogoutModel
+
+@{
+    ViewData["Title"] = "Αποσύνδεση";
+}
+
+<section class="identity-flow-page">
+    <div class="container">
+
+        <div class="identity-flow-card">
+
+            <span class="identity-flow-kicker">
+                ΛΟΓΑΡΙΑΣΜΟΣ
+            </span>
+
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <h1>Αποσύνδεση</h1>
+
+                <p class="identity-flow-lead">
+                    Θέλετε να αποσυνδεθείτε από το MyDoc;
+                </p>
+
+                <form asp-area="Identity"
+                      asp-page="/Account/Logout"
+                      asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })"
+                      method="post">
+
+                    <button type="submit"
+                            class="btn btn-primary-custom">
+                        Αποσύνδεση
+                    </button>
+
+                </form>
+            }
+            else
+            {
+                <h1>Έχετε αποσυνδεθεί</h1>
+
+                <p class="identity-flow-lead">
+                    Η συνεδρία σας ολοκληρώθηκε.
+                </p>
+
+                <div class="identity-flow-actions">
+                    <a asp-page="./Login"
+                       class="btn btn-primary-custom">
+                        Σύνδεση
+                    </a>
+                </div>
+            }
+
+        </div>
+
+    </div>
+</section>

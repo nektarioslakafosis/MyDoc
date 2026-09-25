@@ -1,0 +1,374 @@
+﻿@model MyDoc.Models.DoctorEditAppointmentVM
+@using MyDoc.Models
+
+@{
+    ViewData["Title"] = "Ενημέρωση ραντεβού";
+
+    var cancelledStatusValue =
+        ((int)AppointmentStatus.Cancelled).ToString();
+
+    var approvedStatusValue =
+        ((int)AppointmentStatus.Approved).ToString();
+
+    var isPendingAppointment =
+        Model.CurrentStatus == AppointmentStatus.Pending;
+
+    var isApprovedAppointment =
+        Model.CurrentStatus == AppointmentStatus.Approved;
+
+    var showCancellationReason =
+        isApprovedAppointment ||
+        Model.Status == AppointmentStatus.Cancelled;
+
+    string GetStatusText(AppointmentStatus status) => status switch
+    {
+        AppointmentStatus.Pending => "Σε αναμονή",
+        AppointmentStatus.Approved => "Εγκεκριμένο",
+        AppointmentStatus.Cancelled => "Ακυρωμένο",
+        AppointmentStatus.Expired => "Έληξε",
+        AppointmentStatus.Completed => "Ολοκληρωμένο",
+        AppointmentStatus.NoShow => "Μη προσέλευση",
+        _ => status.ToString()
+    };
+
+    string GetStatusClass(AppointmentStatus status) => status switch
+    {
+        AppointmentStatus.Pending => "status-badge status-pending",
+        AppointmentStatus.Approved => "status-badge status-approved",
+        AppointmentStatus.Cancelled => "status-badge status-cancelled",
+        AppointmentStatus.Expired => "status-badge status-expired",
+        AppointmentStatus.Completed => "status-badge status-approved",
+        AppointmentStatus.NoShow => "status-badge status-cancelled",
+        _ => "status-badge"
+    };
+}
+
+<section class="dashboard-page doctor-status-edit-page doctor-status-modern">
+    <div class="container">
+
+        <div class="action-page-shell">
+
+            <a asp-action="Details"
+               asp-route-id="@Model.Id"
+               class="appointment-back-link">
+                ← Ραντεβού
+            </a>
+
+            <header class="action-page-header">
+                <div>
+                    <span class="action-page-eyebrow">
+                        Διαχείριση ραντεβού
+                    </span>
+
+                    <h1>Ενημέρωση κατάστασης</h1>
+
+                    <p>
+                        @(isPendingAppointment
+                                                ? "Εγκρίνετε το ραντεβού ή ακυρώστε το."
+                                                : "Το ραντεβού είναι εγκεκριμένο και μπορεί να ακυρωθεί πριν την έναρξή του.")
+                    </p>
+                </div>
+
+                <span class="@GetStatusClass(Model.CurrentStatus)">
+                    @GetStatusText(Model.CurrentStatus)
+                </span>
+            </header>
+
+            @if (Model.AvailableStatuses.Any())
+            {
+                <form method="post"
+                      id="doctorStatusForm"
+                      class="action-form-card">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden" asp-for="Id" />
+
+                    <div asp-validation-summary="ModelOnly"
+                         class="text-danger doctor-status-validation">
+                    </div>
+
+                    @if (isPendingAppointment)
+                    {
+                        <div class="action-form-section">
+                            <span class="action-form-label">
+                                Επιλέξτε ενέργεια
+                            </span>
+
+                            <div class="modern-action-options">
+
+                                @foreach (var option in Model.AvailableStatuses)
+                                {
+                                    var status =
+                                    (AppointmentStatus)int.Parse(option.Value!);
+
+                                    var optionId =
+                                    $"status_{option.Value}";
+
+                                    var isSelected =
+                                    Model.Status == status;
+
+                                    var isApproval =
+                                    status == AppointmentStatus.Approved;
+
+                                    <label class="modern-action-option @(isSelected ? "is-selected" : "") @(isApproval ? "is-positive" : "is-danger")"
+                                           for="@optionId"
+                                           data-status-option>
+
+                                        <input asp-for="Status"
+                                               type="radio"
+                                               value="@option.Value"
+                                               id="@optionId"
+                                               class="doctor-status-radio"
+                                               data-status-value="@option.Value" />
+
+                                        <span class="modern-action-icon"
+                                              aria-hidden="true">
+
+                                            @if (isApproval)
+                                            {
+                                                <svg viewBox="0 0 24 24">
+                                                    <path d="M5 12.5l4.2 4.2L19 7" />
+                                                </svg>
+                                            }
+                                            else
+                                            {
+                                                <svg viewBox="0 0 24 24">
+                                                    <path d="M7 7l10 10" />
+                                                    <path d="M17 7L7 17" />
+                                                </svg>
+                                            }
+
+                                    </span>
+
+                                    <span class="modern-action-copy">
+                                        <strong>
+                                            @(isApproval
+                                                                                ? "Έγκριση"
+                                                                                : "Ακύρωση")
+                                                                                        </strong>
+
+                                        <small>
+                                            @(isApproval
+                                                                                ? "Προσθήκη στο πρόγραμμά σας"
+                                                                                : "Ακύρωση με ενημέρωση του ασθενή")
+                                </small>
+                            </span>
+
+                                        <span class="modern-action-selector">
+                                        </span>
+                                    </label>
+                                                }
+
+                            </div>
+                        </div>
+                    }
+                    else if (isApprovedAppointment)
+                    {
+                        <input type="hidden"
+                               name="Status"
+                               value="@cancelledStatusValue" />
+
+                        <div class="approved-cancel-intro">
+                            <span class="approved-cancel-icon"
+                                  aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M7 7l10 10" />
+                                    <path d="M17 7L7 17" />
+                                </svg>
+                            </span>
+
+                            <div>
+                                <strong>Ακύρωση ραντεβού</strong>
+                                <span>
+                                    Ο ασθενής θα ενημερωθεί για την ακύρωση.
+                                </span>
+                            </div>
+                        </div>
+                    }
+
+                <div id="cancellationReasonGroup"
+                     class="modern-cancellation-panel @(showCancellationReason ? "" : "d-none")">
+
+                    <label asp-for="CancellationReason"
+                           class="form-label form-label-custom">
+                        Λόγος ακύρωσης
+                    </label>
+
+                    <textarea asp-for="CancellationReason"
+                              id="cancellationReasonInput"
+                              class="form-control form-control-custom textarea-custom"
+                              rows="4"
+                              maxlength="600"
+                              placeholder="Γράψτε σύντομα τον λόγο..."></textarea>
+
+                    <span asp-validation-for="CancellationReason"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="modern-form-actions">
+
+                    <button type="submit"
+                            id="doctorStatusSubmit"
+                            class="btn @(showCancellationReason ? "btn-danger-custom" : "btn-primary-custom")">
+
+                        @(showCancellationReason
+                                                ? "Ακύρωση ραντεβού"
+                                                : "Έγκριση ραντεβού")
+
+                    </button>
+
+                        <a asp-action="Details"
+                           asp-route-id="@Model.Id"
+                           class="btn btn-outline-dashboard">
+                            Πίσω
+                        </a>
+
+                    </div>
+
+                </form>
+                        }
+            else
+            {
+                <div class="action-form-card">
+                    <div class="modern-locked-state">
+                        <span aria-hidden="true">✓</span>
+
+                        <div>
+                            <strong>Δεν υπάρχουν διαθέσιμες ενέργειες</strong>
+                            <p>
+                                Η κατάσταση αυτού του ραντεβού
+                                δεν μπορεί πλέον να αλλάξει.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="modern-form-actions">
+                        <a asp-action="Details"
+                           asp-route-id="@Model.Id"
+                           class="btn btn-outline-dashboard">
+                            Πίσω στο ραντεβού
+                        </a>
+                    </div>
+                </div>
+            }
+
+        </div>
+
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const statusRadios =
+                document.querySelectorAll(".doctor-status-radio");
+
+            const statusOptions =
+                document.querySelectorAll("[data-status-option]");
+
+            const reasonGroup =
+                document.getElementById("cancellationReasonGroup");
+
+            const reasonInput =
+                document.getElementById("cancellationReasonInput");
+
+            const submitButton =
+                document.getElementById("doctorStatusSubmit");
+
+            const cancelledStatusValue =
+                "@cancelledStatusValue";
+
+            const approvedStatusValue =
+                "@approvedStatusValue";
+
+            if (!statusRadios.length) {
+
+                if (reasonInput) {
+                    reasonInput.required = true;
+                    reasonInput.disabled = false;
+                }
+
+                return;
+            }
+
+            function updateFormState() {
+
+                const selected =
+                    document.querySelector(
+                        ".doctor-status-radio:checked"
+                    );
+
+                statusOptions.forEach(function (option) {
+                    option.classList.remove("is-selected");
+                });
+
+                if (!selected) {
+                    return;
+                }
+
+                const selectedCard =
+                    selected.closest("[data-status-option]");
+
+                if (selectedCard) {
+                    selectedCard.classList.add("is-selected");
+                }
+
+                const isCancelled =
+                    selected.value === cancelledStatusValue;
+
+                if (reasonGroup) {
+                    reasonGroup.classList.toggle(
+                        "d-none",
+                        !isCancelled
+                    );
+                }
+
+                if (reasonInput) {
+                    reasonInput.required = isCancelled;
+                    reasonInput.disabled = !isCancelled;
+                }
+
+                if (submitButton) {
+
+                    submitButton.classList.remove(
+                        "btn-primary-custom",
+                        "btn-danger-custom"
+                    );
+
+                    if (isCancelled) {
+                        submitButton.classList.add(
+                            "btn-danger-custom"
+                        );
+
+                        submitButton.textContent =
+                            "Ακύρωση ραντεβού";
+                    }
+                    else if (
+                        selected.value === approvedStatusValue
+                    ) {
+                        submitButton.classList.add(
+                            "btn-primary-custom"
+                        );
+
+                        submitButton.textContent =
+                            "Έγκριση ραντεβού";
+                    }
+                }
+            }
+
+            statusRadios.forEach(function (radio) {
+                radio.addEventListener(
+                    "change",
+                    updateFormState
+                );
+            });
+
+            updateFormState();
+        });
+    </script>
+}

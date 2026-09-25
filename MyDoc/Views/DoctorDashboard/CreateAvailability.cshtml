@@ -1,0 +1,150 @@
+﻿@model MyDoc.Models.DoctorAvailabilityVM
+
+@{
+    ViewData["Title"] = "Νέα Διαθεσιμότητα";
+}
+
+<section class="dashboard-page doctor-dashboard-page doctor-schedule-form-page">
+    <div class="container">
+
+        <div class="doctor-schedule-form-header">
+            <a asp-action="Schedule" class="appointment-back-link">
+                ← Πρόγραμμα
+            </a>
+
+            <div class="doctor-schedule-form-title">
+                <div class="doctor-schedule-form-icon">
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="17" rx="3"></rect>
+                        <path d="M8 2.5v4"></path>
+                        <path d="M16 2.5v4"></path>
+                        <path d="M3 9h18"></path>
+                        <path d="M12 13v5"></path>
+                        <path d="M9.5 15.5h5"></path>
+                    </svg>
+                </div>
+
+                <div>
+                    <span class="doctor-schedule-form-kicker">
+                        Εβδομαδιαίο πρόγραμμα
+                    </span>
+
+                    <h1>Νέα διαθεσιμότητα</h1>
+
+                    <p>
+                        Ορίστε την ημέρα και τις ώρες κατά τις οποίες μπορούν να κλείνονται ραντεβού.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <section class="doctor-schedule-form-card doctor-schedule-form-card-single">
+            <form asp-action="CreateAvailability" method="post">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger doctor-schedule-validation"></div>
+
+                <div class="doctor-schedule-fields">
+
+                    <div class="doctor-schedule-field doctor-schedule-field-full">
+
+                        <div class="doctor-schedule-label-row">
+                            <label asp-for="DayOfWeek"
+                                   class="form-label form-label-custom">
+                                Ημέρα
+                            </label>
+
+                            <div class="doctor-inline-help">
+                                <button type="button"
+                                        class="doctor-inline-help-trigger"
+                                        aria-label="Πληροφορίες για τη διαθεσιμότητα">
+                                    <svg viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="1.9"
+                                         stroke-linecap="round"
+                                         stroke-linejoin="round"
+                                         aria-hidden="true">
+                                        <circle cx="12" cy="12" r="9"></circle>
+                                        <path d="M12 10v6"></path>
+                                        <path d="M12 7h.01"></path>
+                                    </svg>
+                                </button>
+
+                                <div class="doctor-inline-help-popover" role="tooltip">
+                                    Το ωράριο επαναλαμβάνεται κάθε εβδομάδα.
+                                    Κάθε ραντεβού διαρκεί 30 λεπτά.
+                                </div>
+                            </div>
+                        </div>
+
+                        <select asp-for="DayOfWeek"
+                                class="form-select form-control-custom">
+                            <option value="@((int)DayOfWeek.Monday)">Δευτέρα</option>
+                            <option value="@((int)DayOfWeek.Tuesday)">Τρίτη</option>
+                            <option value="@((int)DayOfWeek.Wednesday)">Τετάρτη</option>
+                            <option value="@((int)DayOfWeek.Thursday)">Πέμπτη</option>
+                            <option value="@((int)DayOfWeek.Friday)">Παρασκευή</option>
+                            <option value="@((int)DayOfWeek.Saturday)">Σάββατο</option>
+                            <option value="@((int)DayOfWeek.Sunday)">Κυριακή</option>
+                        </select>
+
+                        <span asp-validation-for="DayOfWeek"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="doctor-schedule-field">
+                        <label asp-for="StartTime"
+                               class="form-label form-label-custom">
+                            Ώρα έναρξης
+                        </label>
+
+                        <input asp-for="StartTime"
+                               type="time"
+                               class="form-control form-control-custom" />
+
+                        <span asp-validation-for="StartTime"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="doctor-schedule-field">
+                        <label asp-for="EndTime"
+                               class="form-label form-label-custom">
+                            Ώρα λήξης
+                        </label>
+
+                        <input asp-for="EndTime"
+                               type="time"
+                               class="form-control form-control-custom" />
+
+                        <span asp-validation-for="EndTime"
+                              class="text-danger"></span>
+                    </div>
+
+                </div>
+
+                <div class="doctor-schedule-form-actions">
+                    <button type="submit" class="btn btn-primary-custom">
+                        Προσθήκη διαθεσιμότητας
+                    </button>
+
+                    <a asp-action="Schedule" class="btn btn-outline-dashboard">
+                        Ακύρωση
+                    </a>
+                </div>
+            </form>
+        </section>
+
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

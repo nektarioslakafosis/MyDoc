@@ -1,0 +1,430 @@
+﻿@using MyDoc.Models
+@using System.Globalization
+@model MyDoc.Models.AdminDashboardVM
+
+@{
+    ViewData["Title"] = "Επισκόπηση";
+
+    var greekCulture =
+        new CultureInfo("el-GR");
+
+    string GetStatusClass(
+        AppointmentStatus status) =>
+        status switch
+        {
+            AppointmentStatus.Pending =>
+                "status-badge status-pending",
+
+            AppointmentStatus.Approved =>
+                "status-badge status-approved",
+
+            AppointmentStatus.Cancelled =>
+                "status-badge status-cancelled",
+
+            AppointmentStatus.Expired =>
+                "status-badge status-expired",
+
+            AppointmentStatus.Completed =>
+                "status-badge status-completed",
+
+            AppointmentStatus.NoShow =>
+                "status-badge status-noshow",
+
+            _ => "status-badge"
+        };
+
+    string GetStatusText(
+        AppointmentStatus status) =>
+        status switch
+        {
+            AppointmentStatus.Pending =>
+                "Σε αναμονή",
+
+            AppointmentStatus.Approved =>
+                "Εγκεκριμένο",
+
+            AppointmentStatus.Cancelled =>
+                "Ακυρωμένο",
+
+            AppointmentStatus.Expired =>
+                "Έληξε",
+
+            AppointmentStatus.Completed =>
+                "Ολοκληρωμένο",
+
+            AppointmentStatus.NoShow =>
+                "Μη προσέλευση",
+
+            _ => status.ToString()
+        };
+}
+
+<section class="dashboard-page admin-v4-page">
+    <div class="container">
+
+        <header class="admin-v4-header">
+
+            <div class="admin-v4-heading">
+                <span class="admin-v4-eyebrow">
+                    ΔΙΑΧΕΙΡΙΣΗ MYDOC
+                </span>
+
+                <h1>Επισκόπηση</h1>
+
+                <p>
+                    Η βασική εικόνα των λογαριασμών
+                    και των ραντεβού της εφαρμογής.
+                </p>
+            </div>
+
+            <a asp-controller="Doctors"
+               asp-action="Create"
+               class="btn btn-primary-custom admin-v4-header-cta">
+                <span aria-hidden="true">+</span>
+                Νέος ιατρός
+            </a>
+
+        </header>
+
+
+        <div class="admin-v4-kpi-grid">
+
+            <article class="admin-v4-kpi-card">
+
+                <div class="admin-v4-kpi-top">
+                    <div class="admin-v4-kpi-icon is-primary">
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <circle cx="12" cy="7" r="4"></circle>
+                            <path d="M5 21v-2a7 7 0 0 1 14 0v2"></path>
+                            <path d="M19 5v4"></path>
+                            <path d="M17 7h4"></path>
+                        </svg>
+                    </div>
+
+                    <a asp-controller="Doctors"
+                       asp-action="Index"
+                       class="admin-v4-card-arrow"
+                       aria-label="Προβολή ιατρών">
+                        ↗
+                    </a>
+                </div>
+
+                <span class="admin-v4-kpi-label">
+                    Ενεργοί ιατροί
+                </span>
+
+                <strong class="admin-v4-kpi-value">
+                    @Model.ActiveDoctors
+                </strong>
+
+                <small>
+                    @Model.TotalDoctors συνολικά
+                </small>
+
+            </article>
+
+
+            <article class="admin-v4-kpi-card">
+
+                <div class="admin-v4-kpi-top">
+                    <div class="admin-v4-kpi-icon is-cyan">
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <circle cx="12" cy="8" r="4"></circle>
+                            <path d="M4.5 21c.7-4.2 3.2-6.5 7.5-6.5s6.8 2.3 7.5 6.5"></path>
+                        </svg>
+                    </div>
+
+                    <a asp-controller="Patients"
+                       asp-action="Index"
+                       class="admin-v4-card-arrow"
+                       aria-label="Προβολή ασθενών">
+                        ↗
+                    </a>
+                </div>
+
+                <span class="admin-v4-kpi-label">
+                    Ενεργοί ασθενείς
+                </span>
+
+                <strong class="admin-v4-kpi-value">
+                    @Model.ActivePatients
+                </strong>
+
+                <small>
+                    @Model.TotalPatients συνολικά
+                </small>
+
+            </article>
+
+
+            <article class="admin-v4-kpi-card">
+
+                <div class="admin-v4-kpi-top">
+                    <div class="admin-v4-kpi-icon is-success">
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <rect x="4" y="5" width="16" height="15" rx="3"></rect>
+                            <path d="M8 3v4"></path>
+                            <path d="M16 3v4"></path>
+                            <path d="M4 10h16"></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <span class="admin-v4-kpi-label">
+                    Ραντεβού σήμερα
+                </span>
+
+                <strong class="admin-v4-kpi-value">
+                    @Model.TodayAppointments
+                </strong>
+
+                <small>
+                    Ενεργά για σήμερα
+                </small>
+
+            </article>
+
+
+            <article class="admin-v4-kpi-card">
+
+                <div class="admin-v4-kpi-top">
+                    <div class="admin-v4-kpi-icon is-muted">
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <path d="M12 7v5l3 2"></path>
+                        </svg>
+                    </div>
+
+                    <a asp-controller="Appointments"
+                       asp-action="Index"
+                       class="admin-v4-card-arrow"
+                       aria-label="Προβολή ραντεβού">
+                        ↗
+                    </a>
+                </div>
+
+                <span class="admin-v4-kpi-label">
+                    Σύνολο ραντεβού
+                </span>
+
+                <strong class="admin-v4-kpi-value">
+                    @Model.TotalAppointments
+                </strong>
+
+                <small>
+                    Σε όλο το ιστορικό
+                </small>
+
+            </article>
+
+        </div>
+
+
+        <div class="admin-v4-main-grid">
+
+            <section class="admin-v4-panel">
+
+                <div class="admin-v4-panel-header">
+                    <div>
+                        <h2>Επόμενα ραντεβού</h2>
+                        <p>
+                            Τα πλησιέστερα ενεργά ραντεβού.
+                        </p>
+                    </div>
+
+                    <a asp-controller="Appointments"
+                       asp-action="Index"
+                       class="admin-v4-panel-link">
+                        Προβολή όλων
+                    </a>
+                </div>
+
+                @if (!Model.UpcomingAppointments.Any())
+                {
+                    <div class="admin-v4-empty">
+                        <strong>
+                            Δεν υπάρχουν επερχόμενα ραντεβού
+                        </strong>
+
+                        <span>
+                            Τα νέα ραντεβού θα εμφανιστούν εδώ.
+                        </span>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table admin-v4-table align-middle">
+
+                            <thead>
+                                <tr>
+                                    <th>Ημερομηνία</th>
+                                    <th>Ασθενής</th>
+                                    <th>Ιατρός</th>
+                                    <th>Κατάσταση</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var appointment
+                                                            in Model.UpcomingAppointments)
+                                {
+                                    var patientName =
+                                    appointment.Patient == null
+                                    ? "—"
+                                    : $"{appointment.Patient.FirstName} {appointment.Patient.LastName}";
+
+                                    var doctorName =
+                                    $"{appointment.Doctor.FirstName} {appointment.Doctor.LastName}";
+
+                                    <tr>
+                                        <td>
+                                            <div class="admin-v4-date-cell">
+                                                <strong>
+                                                    @appointment.AppointmentDate.ToString(
+                                                    "dd MMM",
+                                                                                        greekCulture)
+                                        </strong>
+
+                                        <span>
+                                            @appointment.AppointmentDate.ToString("HH:mm")
+                                        </span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <strong class="admin-v4-table-primary">
+                                        @patientName
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    <strong class="admin-v4-table-primary">
+                                        @doctorName
+                                    </strong>
+
+                                    <small class="admin-v4-table-secondary">
+                                        @appointment.Doctor.Specialty
+                                    </small>
+                                </td>
+
+                                <td>
+                                    <span class="@GetStatusClass(appointment.Status)">
+                                        @GetStatusText(appointment.Status)
+                                    </span>
+                                </td>
+
+                                <td class="text-end">
+                                    <a asp-controller="Appointments"
+                                       asp-action="Details"
+                                       asp-route-id="@appointment.Id"
+                                       class="admin-v4-icon-action"
+                                       aria-label="Προβολή ραντεβού"
+                                       title="Προβολή">
+
+                                        <svg viewBox="0 0 24 24"
+                                             fill="none"
+                                             stroke="currentColor"
+                                             stroke-width="1.8"
+                                             stroke-linecap="round"
+                                             stroke-linejoin="round">
+                                            <path d="M5 12h14"></path>
+                                            <path d="m14 7 5 5-5 5"></path>
+                                        </svg>
+
+                                    </a>
+                                </td>
+                            </tr>
+                                                        }
+                            </tbody>
+
+                        </table>
+                    </div>
+                }
+
+            </section>
+
+
+            <aside class="admin-v4-panel admin-v4-status-panel">
+
+                <div class="admin-v4-panel-header">
+                    <div>
+                        <h2>Κατάσταση ραντεβού</h2>
+                        <p>
+                            Κατανομή σε όλο το ιστορικό.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="admin-v4-status-list">
+
+                    <div class="admin-v4-status-row">
+                        <span class="admin-v4-status-dot is-warning"></span>
+                        <span>Σε αναμονή</span>
+                        <strong>@Model.PendingAppointments</strong>
+                    </div>
+
+                    <div class="admin-v4-status-row">
+                        <span class="admin-v4-status-dot is-success"></span>
+                        <span>Εγκεκριμένα</span>
+                        <strong>@Model.ApprovedAppointments</strong>
+                    </div>
+
+                    <div class="admin-v4-status-row">
+                        <span class="admin-v4-status-dot is-blue"></span>
+                        <span>Ολοκληρωμένα</span>
+                        <strong>@Model.CompletedAppointments</strong>
+                    </div>
+
+                    <div class="admin-v4-status-row">
+                        <span class="admin-v4-status-dot is-danger"></span>
+                        <span>Ακυρωμένα</span>
+                        <strong>@Model.CancelledAppointments</strong>
+                    </div>
+
+                    <div class="admin-v4-status-row">
+                        <span class="admin-v4-status-dot is-muted"></span>
+                        <span>Έληξαν</span>
+                        <strong>@Model.ExpiredAppointments</strong>
+                    </div>
+
+                    <div class="admin-v4-status-row">
+                        <span class="admin-v4-status-dot is-noshow"></span>
+                        <span>Μη προσέλευση</span>
+                        <strong>@Model.NoShowAppointments</strong>
+                    </div>
+
+                </div>
+
+                <div class="admin-v4-status-total">
+                    <span>Σύνολο</span>
+                    <strong>@Model.TotalAppointments</strong>
+                </div>
+
+            </aside>
+
+        </div>
+
+    </div>
+</section>

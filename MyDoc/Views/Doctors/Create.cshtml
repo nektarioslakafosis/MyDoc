@@ -1,0 +1,198 @@
+﻿@model MyDoc.Models.Doctor
+
+@{
+    ViewData["Title"] = "Νέος ιατρός";
+}
+
+<section class="dashboard-page admin-v4-page">
+    <div class="container">
+
+        <header class="admin-v4-form-header">
+
+            <a asp-action="Index"
+               class="appointment-back-link">
+                ← Ιατροί
+            </a>
+
+            <span class="admin-v4-eyebrow">
+                ΝΕΟΣ ΛΟΓΑΡΙΑΣΜΟΣ
+            </span>
+
+            <h1>Νέος ιατρός</h1>
+
+            <p>
+                Συμπληρώστε τα στοιχεία που χρειάζονται
+                για τον λογαριασμό και την εμφάνισή του στο MyDoc.
+            </p>
+
+        </header>
+
+
+        <form asp-action="Create"
+              method="post"
+              class="admin-v4-form-card"
+              novalidate>
+
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="ModelOnly"
+                 class="admin-v4-validation text-danger">
+            </div>
+
+
+            <section class="admin-v4-form-section">
+
+                <div class="admin-v4-form-section-heading">
+                    <h2>Στοιχεία ιατρού</h2>
+                    <p>
+                        Βασικές πληροφορίες που εμφανίζονται
+                        στην εφαρμογή.
+                    </p>
+                </div>
+
+                <div class="admin-v4-form-grid">
+
+                    <div class="admin-v4-field">
+                        <label asp-for="FirstName">
+                            Όνομα
+                        </label>
+
+                        <input asp-for="FirstName"
+                               class="admin-v4-input"
+                               autocomplete="given-name"
+                               placeholder="Όνομα" />
+
+                        <span asp-validation-for="FirstName"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="admin-v4-field">
+                        <label asp-for="LastName">
+                            Επώνυμο
+                        </label>
+
+                        <input asp-for="LastName"
+                               class="admin-v4-input"
+                               autocomplete="family-name"
+                               placeholder="Επώνυμο" />
+
+                        <span asp-validation-for="LastName"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="admin-v4-field admin-v4-field-full">
+                        <label asp-for="Specialty">
+                            Ειδικότητα
+                        </label>
+
+                        <input asp-for="Specialty"
+                               class="admin-v4-input"
+                               placeholder="π.χ. Καρδιολογία" />
+
+                        <span asp-validation-for="Specialty"
+                              class="text-danger"></span>
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <section class="admin-v4-form-section">
+
+                <div class="admin-v4-form-section-heading">
+                    <h2>Στοιχεία σύνδεσης</h2>
+                    <p>
+                        Χρησιμοποιούνται για την πρόσβαση
+                        του ιατρού στον λογαριασμό του.
+                    </p>
+                </div>
+
+                <div class="admin-v4-form-grid">
+
+                    <div class="admin-v4-field">
+                        <label asp-for="Email">
+                            Email
+                        </label>
+
+                        <input asp-for="Email"
+                               type="text"
+                               inputmode="email"
+                               class="admin-v4-input"
+                               autocomplete="email"
+                               placeholder="name@hospital.com" />
+
+                        <span asp-validation-for="Email"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="admin-v4-field">
+                        <label asp-for="PhoneNumber">
+                            Τηλέφωνο
+                        </label>
+
+                        <input asp-for="PhoneNumber"
+                               type="text"
+                               inputmode="numeric"
+                               maxlength="10"
+                               class="admin-v4-input"
+                               autocomplete="tel"
+                               placeholder="69XXXXXXXX" />
+
+                        <span asp-validation-for="PhoneNumber"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="admin-v4-field admin-v4-field-full">
+                        <label for="doctorPassword">
+                            Κωδικός πρόσβασης
+                        </label>
+
+                        <input id="doctorPassword"
+                               name="password"
+                               type="password"
+                               class="admin-v4-input"
+                               autocomplete="new-password"
+                               placeholder="Κωδικός πρόσβασης" />
+
+                        @Html.ValidationMessage(
+                        "password",
+                                                null,
+                                                new
+                                                {
+                                                    @class = "text-danger"
+                                                })
+                    </div>
+
+                </div>
+
+                <div class="admin-v4-info-note">
+                    Ο λογαριασμός ενεργοποιείται αμέσως
+                    μετά τη δημιουργία του.
+                </div>
+
+            </section>
+
+
+            <div class="admin-v4-form-actions">
+
+                <button type="submit"
+                        class="btn btn-primary-custom">
+                    Δημιουργία ιατρού
+                </button>
+
+                <a asp-action="Index"
+                   class="btn btn-outline-dashboard">
+                    Άκυρο
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,261 @@
+﻿@model MyDoc.Models.Appointment
+@using MyDoc.Models
+
+@{
+    ViewData["Title"] = "Ραντεβού";
+
+    string GetStatusClass(
+        AppointmentStatus status) =>
+        status switch
+        {
+            AppointmentStatus.Pending =>
+                "status-badge status-pending",
+
+            AppointmentStatus.Approved =>
+                "status-badge status-approved",
+
+            AppointmentStatus.Cancelled =>
+                "status-badge status-cancelled",
+
+            AppointmentStatus.Expired =>
+                "status-badge status-expired",
+
+            AppointmentStatus.Completed =>
+                "status-badge status-completed",
+
+            AppointmentStatus.NoShow =>
+                "status-badge status-noshow",
+
+            _ => "status-badge"
+        };
+
+    string GetStatusText(
+        AppointmentStatus status) =>
+        status switch
+        {
+            AppointmentStatus.Pending =>
+                "Σε αναμονή",
+
+            AppointmentStatus.Approved =>
+                "Εγκεκριμένο",
+
+            AppointmentStatus.Cancelled =>
+                "Ακυρωμένο",
+
+            AppointmentStatus.Expired =>
+                "Έληξε",
+
+            AppointmentStatus.Completed =>
+                "Ολοκληρωμένο",
+
+            AppointmentStatus.NoShow =>
+                "Μη προσέλευση",
+
+            _ => status.ToString()
+        };
+
+    string GetRoleText(string? role) =>
+        role switch
+        {
+            "Patient" => "Ασθενής",
+            "Doctor" => "Ιατρός",
+            "Admin" => "Διαχειριστής",
+            _ => "—"
+        };
+
+    var patientName =
+        Model.Patient == null
+            ? "—"
+            : $"{Model.Patient.FirstName} {Model.Patient.LastName}";
+}
+
+<section class="dashboard-page admin-v4-page">
+    <div class="container">
+
+        <div class="admin-v4-subpage-header">
+            <a asp-action="Index"
+               class="appointment-back-link">
+                ← Ραντεβού
+            </a>
+        </div>
+
+
+        <section class="admin-v4-appointment-hero">
+
+            <div class="admin-v4-appointment-date">
+                <span>
+                    @Model.AppointmentDate.ToString("MMM")
+                </span>
+
+                <strong>
+                    @Model.AppointmentDate.ToString("dd")
+                </strong>
+
+                <small>
+                    @Model.AppointmentDate.ToString("HH:mm")
+                </small>
+            </div>
+
+            <div class="admin-v4-appointment-main">
+
+                <span class="admin-v4-eyebrow">
+                    ΡΑΝΤΕΒΟΥ
+                </span>
+
+                <h1>
+                    @Model.Doctor.FirstName
+                    @Model.Doctor.LastName
+                </h1>
+
+                <p>
+                    @Model.Doctor.Specialty
+                </p>
+
+            </div>
+
+            <span class="@GetStatusClass(Model.Status)">
+                @GetStatusText(Model.Status)
+            </span>
+
+        </section>
+
+
+        <section class="admin-v4-panel">
+
+            <div class="admin-v4-panel-header">
+                <div>
+                    <h2>Στοιχεία ραντεβού</h2>
+                    <p>
+                        Πληροφορίες διαχείρισης
+                        για το συγκεκριμένο ραντεβού.
+                    </p>
+                </div>
+            </div>
+
+
+            <div class="admin-v4-detail-grid">
+
+                <div class="admin-v4-detail-item">
+                    <span>Ημερομηνία</span>
+                    <strong>
+                        @Model.AppointmentDate.ToString("dd/MM/yyyy")
+                    </strong>
+                </div>
+
+                <div class="admin-v4-detail-item">
+                    <span>Ώρα</span>
+                    <strong>
+                        @Model.AppointmentDate.ToString("HH:mm")
+                    </strong>
+                </div>
+
+                <div class="admin-v4-detail-item">
+                    <span>Ιατρός</span>
+                    <strong>
+                        @Model.Doctor.FirstName
+                        @Model.Doctor.LastName
+                    </strong>
+                </div>
+
+                <div class="admin-v4-detail-item">
+                    <span>Ασθενής</span>
+                    <strong>
+                        @patientName
+                    </strong>
+                </div>
+
+                <div class="admin-v4-detail-item admin-v4-detail-item-full">
+                    <span>Περιγραφή</span>
+                    <p>@Model.Description</p>
+                </div>
+
+            </div>
+
+
+            @if (Model.Status ==
+                        AppointmentStatus.Cancelled)
+            {
+                <div class="admin-v4-context-box is-danger">
+
+                    <strong>
+                        Στοιχεία ακύρωσης
+                    </strong>
+
+                    <div>
+                        <span>
+                            Από:
+                            @GetRoleText(Model.CancelledByRole)
+                        </span>
+
+                        <span>
+                            @(Model.CancelledAt.HasValue
+                                                    ? Model.CancelledAt.Value.ToString("dd/MM/yyyy HH:mm")
+                                                    : "—")
+                    </span>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(
+                                Model.CancellationReason))
+                    {
+                        <p>
+                            @Model.CancellationReason
+                        </p>
+                    }
+
+                </div>
+            }
+
+
+            @if (Model.Status ==
+                        AppointmentStatus.Completed ||
+                        Model.Status ==
+                        AppointmentStatus.NoShow)
+            {
+                <div class="admin-v4-context-box">
+
+                    <strong>
+                        Καταχώρηση ολοκλήρωσης
+                    </strong>
+
+                    <div>
+                        <span>
+                            Από:
+                            @GetRoleText(Model.ClosedByRole)
+                        </span>
+
+                        <span>
+                            @(Model.ClosedAt.HasValue
+                                                    ? Model.ClosedAt.Value.ToString("dd/MM/yyyy HH:mm")
+                                                    : "—")
+                    </span>
+                </div>
+
+                </div>
+                        }
+
+
+            <div class="admin-v4-privacy-note">
+
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="1.8">
+                    <rect x="5" y="10"
+                          width="14"
+                          height="10"
+                          rx="2"></rect>
+                    <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+                </svg>
+
+                <span>
+                    Εδώ εμφανίζονται μόνο στοιχεία
+                    που χρειάζονται για τη διαχείριση
+                    του ραντεβού.
+                </span>
+
+            </div>
+
+        </section>
+
+    </div>
+</section>

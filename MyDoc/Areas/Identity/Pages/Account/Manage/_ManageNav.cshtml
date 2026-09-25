@@ -1,0 +1,60 @@
+﻿<nav class="account-settings-nav">
+
+    <a asp-area=""
+       asp-controller="Settings"
+       asp-action="Index"
+       class="account-settings-nav-item">
+
+        <svg viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="1.8"
+             stroke-linecap="round"
+             stroke-linejoin="round"
+             aria-hidden="true">
+            <circle cx="12" cy="8" r="4"></circle>
+            <path d="M4.5 21c.7-4.2 3.2-6.5 7.5-6.5s6.8 2.3 7.5 6.5"></path>
+        </svg>
+
+        <span>Προφίλ</span>
+    </a>
+
+    @if (User.IsInRole("Patient"))
+    {
+        <a asp-page="./Email"
+           class="account-settings-nav-item @ManageNavPages.EmailNavClass(ViewContext)">
+
+            <svg viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="1.8"
+                 stroke-linecap="round"
+                 stroke-linejoin="round"
+                 aria-hidden="true">
+                <rect x="3" y="5" width="18" height="14" rx="3"></rect>
+                <path d="m4 7 8 6 8-6"></path>
+            </svg>
+
+            <span>Email σύνδεσης</span>
+        </a>
+    }
+
+    <a asp-page="./ChangePassword"
+       class="account-settings-nav-item @ManageNavPages.ChangePasswordNavClass(ViewContext)">
+
+        <svg viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="1.8"
+             stroke-linecap="round"
+             stroke-linejoin="round"
+             aria-hidden="true">
+            <rect x="4" y="10" width="16" height="11" rx="3"></rect>
+            <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+            <circle cx="12" cy="15.5" r="1"></circle>
+        </svg>
+
+        <span>Κωδικός</span>
+    </a>
+
+</nav>
